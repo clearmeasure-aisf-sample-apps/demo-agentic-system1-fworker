@@ -1,0 +1,16 @@
+@startuml
+!pragma layout smetana
+!include <C4/C4_Component>
+HIDE_STEREOTYPE()
+skinparam wrapWidth 900
+skinparam maxMessageSize 300
+skinparam nodesep 40
+skinparam ranksep 60
+UpdateElementStyle("component", $bgColor="#eceff1", $fontColor="#1c2b33", $borderColor="#455a64")
+UpdateElementStyle("system", $bgColor="#37474f", $fontColor="#ffffff", $borderColor="#263238")
+System(process, "dotnet FactoryWorker.Gateway.dll", "The process the container image starts")
+Boundary(app, "fworker 1.0.1", "Assemblies of the application") {
+  Component(a_FactoryWorker_Gateway, "FactoryWorker.Gateway", $descr="Azure.Identity 1.21.0\nModelContextProtocol.AspNetCore 1.0.0")
+}
+Rel(process, a_FactoryWorker_Gateway, "starts")
+@enduml
