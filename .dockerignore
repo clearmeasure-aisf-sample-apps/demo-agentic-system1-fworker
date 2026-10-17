@@ -1,0 +1,8 @@
+# The image is built from gateway/, plugin/ and config/ only (see Dockerfile). Tests, tools and documents never reach the build.
+.git
+.github
+docs
+tests
+tools
+**/bin
+**/obj

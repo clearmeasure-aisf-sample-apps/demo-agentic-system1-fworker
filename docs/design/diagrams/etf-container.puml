@@ -1,0 +1,22 @@
+@startuml etf-container
+!include <C4/C4_Container>
+title Containers of one environment (the same in tdd, uat and prod; values from FACTORY_* variables)
+Person(owner, "Owner", "dashboard Owner actions, or own AI session via MCP")
+System_Boundary(env, "Container Apps environment of <env>") {
+  Container(gw, "fworker gateway", "ASP.NET Core, pwsh rule scripts", "Scope env:<env>, board, mergePolicy, factory state, dispatcher, triggers, Owner actions, /mcp, catalog")
+  Container(wjob, "caj-cmdemo1-<env>-fwrunner-codex", "Container Apps job, fwrunner image", "One execution per item and phase, w2 credential")
+  Container(rjob, "caj-cmdemo1-<env>-fwrole", "Container Apps job, fwrunner image, FWRUNNER_ROLE", "One execution per ticket: plant manager, operator, keeper")
+}
+System_Ext(gh, "GitHub", "cmdemo1-workorders, <env> board, App of <env>")
+System_Ext(model, "aif-cmdemo1-<env>", "gpt-6.1-sol")
+System_Ext(arm, "Azure Resource Manager", "Job executions")
+Rel(gw, arm, "start / list / stop executions", "managed identity")
+Rel(arm, wjob, "execution")
+Rel(arm, rjob, "execution with role and ticket")
+Rel(wjob, gw, "redeem nonce, verbs, SSE stream", "w2")
+Rel(rjob, gw, "redeem nonce, role verbs, SSE stream, done", "m1/o1/k1/s1")
+Rel(wjob, model, "Codex", "Entra")
+Rel(rjob, model, "Codex", "Entra")
+Rel(gw, gh, "sweep, claims refs/factory/factory-worker-<env>, PRs", "installation token")
+Rel(owner, gw, "Owner actions, /mcp, operator token or Entra")
+@enduml

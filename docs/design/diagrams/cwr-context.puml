@@ -1,0 +1,19 @@
+@startuml cwr-context
+!include <C4/C4_Context>
+title System context: factory worker gateway with cloud worker runtimes
+Person(owner, "Owner / operator", "Moves items to Technical Design, approves protected changes, promotes uat and prod")
+System(fworker, "fworker gateway", "Sweeps board 679, keeps the plant, mints w1/i1 tokens, serves plugin and SSE stream; control plane of every runtime")
+System_Ext(local, "Local workers", "Claude Code sessions on a person's machine, launcher loop (runtime=local)")
+System(cae, "CAE worker runtime", "Container Apps Job, one execution per work item (runtime=cae-job)")
+System_Ext(gh, "GitHub", "cmdemo1-workorders repo, board, Actions CI; GitHub Apps")
+System_Ext(model, "Microsoft Foundry", "Claude Sonnet 5.5 in Microsoft Foundry (Global Standard), Entra auth")
+System_Ext(octo, "Octopus Deploy", "Releases of cmdemo1 deployables")
+Rel(owner, fworker, "dashboard, operator token")
+Rel(fworker, gh, "sweeps, verbs, installation tokens")
+Rel(fworker, cae, "provisions: start job execution")
+Rel(local, fworker, "w1 token, SSE stream, verbs")
+Rel(cae, fworker, "w2 token (via nonce), SSE stream, verbs (internal)")
+Rel(cae, gh, "git clone/push")
+Rel(cae, model, "Claude Code CLI, managed identity token")
+Rel(fworker, octo, "release checks")
+@enduml

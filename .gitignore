@@ -1,0 +1,11 @@
+bin/
+obj/
+.cache/
+*.log
+node_modules/
+.vs/
+*.user
+.idea/
+TestResults/
+# the record of the last tests/fullrun/create-items.ps1 run
+tests/fullrun/created.json

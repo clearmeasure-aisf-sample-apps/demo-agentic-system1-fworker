@@ -1,0 +1,23 @@
+@startuml cwr-lifecycle
+title One item, one CAE job execution
+participant "Sweep / plant" as P
+participant "CaeJobRuntime" as A
+participant "ARM (Container Apps Jobs)" as ARM
+participant "fwrunner execution" as R
+participant "Claude Code (auto mode)" as C
+P -> A: item N routed to runtime cae-job (capacity free)
+A -> A: mint nonce for name cae-<N>-<rand>
+A -> ARM: POST jobs/{job}/start (env: FACTORY_URL, FACTORY_HOLDER, FACTORY_ITEM_HINT, NONCE)
+ARM -> R: schedule replica (image pull, cache mount)
+R -> A: redeem nonce -> w2 (TTL = timeout + 15 min)
+R -> R: plugin-sync, clone repo (shallow + fetch branch)
+R -> C: claude -p --settings /etc/fworker/settings.json <connect prompt>
+C -> P: subscribe --own (worker.registered, runtime=cae-job)
+P -> C: item.assigned N (i1 token)
+C -> C: design / develop / test via subagents
+C -> P: end-session (drain + marker)
+P --> C: session.end (also after take-back)
+R -> R: marker seen: stop claude, exit 0
+A <- ARM: execution Succeeded / Failed / timed out
+A -> P: failed: revoke name; record outcome; failed => take back item, re-route (max 2)
+@enduml

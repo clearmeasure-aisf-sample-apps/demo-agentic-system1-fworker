@@ -1,0 +1,155 @@
+# Tier 1 of the factory worker gateway: the gateway and the fake GitHub are built, then the smoke test and every scenario suite run at the
+# full tier (tests/scenarios/run-all.ps1 and run.ps1). No secret, no network beyond the downloads: the suites talk to tests/FakeGitHub.
+# Build (build.yml) calls this workflow for every pull request and for a Build started by hand, and its required check "Build result"
+# needs it: a red suite blocks the merge exactly as a failed image build does. It does not run for the push that follows a merge (that
+# content was tested as the pull request), so the time from a merge to its release is unchanged (a Build of master started by hand does wait for them). Run it alone with `gh workflow run Tests`.
+#
+# The suites are split over jobs so that each stays far below the timeout on a hosted runner (4 cores). The suites qc, messaging and manager
+# split themselves into 4 groups inside their own job (run.ps1). The owner suite is split over 2 jobs (owner-a, owner-b), each running one of
+# its 2 groups (run.ps1 -Groups 2 -Group g, contiguous runs of the suite, as its scenarios build on each other): run inside one job, or under run-all.ps1 (which passes -Groups 1), it took 36-40 minutes against the
+# limit. The others run side by side under run-all.ps1.
+# A new suite (a new entry in $SuiteDefs of tests/scenarios/run.ps1) must be added to one of the jobs below: the step "Every suite is in
+# a job" fails the run when one is missing.
+name: Tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # The PowerShell the container image runs (Dockerfile, PWSH_VERSION) and the connect prompt downloads.
+  PWSH_VERSION: "7.5.4"
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  POWERSHELL_TELEMETRY_OPTOUT: "1"
+  POWERSHELL_UPDATECHECK: "Off"
+
+jobs:
+  tier1:
+    name: Tier 1 (${{ matrix.name }})
+    runs-on: ubuntu-24.04
+    # the owner halves get a margin above the others' 40 minutes
+    timeout-minutes: ${{ matrix.timeout || 40 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: flow
+            runner: run-all
+            suites: auto,peer-approved,merge-queue,qc-rate,qc-proxy
+          - name: gate
+            runner: run-all
+            suites: qc-gate,qc-gate-idle,qc-gate-lifetime,qc-gate-grace,qc-gate-lease,qc-gate-waiting,qc-gate-race
+          - name: workers
+            runner: run-all
+            suites: qc-worker,author
+          # the owner suite alone: with qc-worker and author in one job it ran 32-39 minutes against the 40-minute limit (issue 154)
+          # and since then one group of 2 per job: the default 2 groups of run.ps1 ran one after the other in one job (36-40 minutes)
+          - name: owner-a
+            runner: run
+            suites: owner
+            groups: 2
+            group: 0
+            timeout: 55
+          - name: owner-b
+            runner: run
+            suites: owner
+            groups: 2
+            group: 1
+            timeout: 55
+          - name: qc
+            runner: run
+            suites: qc
+          - name: messaging
+            runner: run
+            suites: messaging
+          - name: manager
+            runner: run
+            suites: manager
+          - name: operator
+            runner: run-all
+            suites: operator,runtime,mcp,cursor
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: PowerShell ${{ env.PWSH_VERSION }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/pwsh"
+          curl -fsSL "https://github.com/PowerShell/PowerShell/releases/download/v${PWSH_VERSION}/powershell-${PWSH_VERSION}-linux-x64.tar.gz" | tar -xz -C "$RUNNER_TEMP/pwsh"
+          chmod +x "$RUNNER_TEMP/pwsh/pwsh"
+          echo "$RUNNER_TEMP/pwsh" >> "$GITHUB_PATH"
+
+      - name: Build the gateway and the fake GitHub
+        run: |
+          set -euo pipefail
+          pwsh --version
+          for project in tests/FakeGitHub gateway; do
+            dotnet build "$project" --configuration Release -nodeReuse:false -p:UseSharedCompilation=false --verbosity quiet
+          done
+
+      - name: Every suite is in a job
+        run: |
+          set -euo pipefail
+          listed=$(grep -E '^\s+suites: ' .github/workflows/tests.yml | sed -E 's/^\s+suites: //' | tr ',' '\n' | sort -u)
+          known=$(pwsh -NoProfile -File tests/scenarios/run.ps1 -ListSuites | sort)
+          if [ "$listed" != "$known" ]; then
+            echo "::error::The jobs of tests.yml and the suites of tests/scenarios/run.ps1 differ (< jobs, > suites):"
+            diff <(echo "$listed") <(echo "$known") || true
+            exit 1
+          fi
+
+      - name: Smoke
+        run: pwsh -NoProfile -File tests/smoke.ps1
+
+      - name: Suites ${{ matrix.suites }} (full tier)
+        env:
+          SUITES: ${{ matrix.suites }}
+          RUNNER_KIND: ${{ matrix.runner }}
+          SUITE_GROUPS: ${{ matrix.groups }}
+          SUITE_GROUP: ${{ matrix.group }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/suite-logs"
+          if [ "$RUNNER_KIND" = "run-all" ]; then
+            pwsh -NoProfile -File tests/scenarios/run-all.ps1 -Tier full -NoBuild -Parallel 4 -Suites "$SUITES" -LogDir "$RUNNER_TEMP/suite-logs"
+          elif [ -n "$SUITE_GROUPS" ]; then
+            # one group of the suite in this job (the other groups run in jobs of their own)
+            pwsh -NoProfile -File tests/scenarios/run.ps1 -Tier full -NoBuild -Suite "$SUITES" -Groups "$SUITE_GROUPS" -Group "$SUITE_GROUP" -ResultFile "$RUNNER_TEMP/suite-logs/$SUITES-g$SUITE_GROUP.result.json" 2>&1 | tee "$RUNNER_TEMP/suite-logs/$SUITES-g$SUITE_GROUP.log"
+          else
+            pwsh -NoProfile -File tests/scenarios/run.ps1 -Tier full -NoBuild -Suite "$SUITES" 2>&1 | tee "$RUNNER_TEMP/suite-logs/$SUITES.log"
+          fi
+
+      # The logs hold the fixtures of the tests only (the suites know no real credential).
+      - name: Keep the logs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: suite-logs-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/suite-logs/*.log
+            ${{ runner.temp }}/suite-logs/*.err
+            ${{ runner.temp }}/suite-logs/*.result.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # One outcome under a fixed name, for the job of build.yml that calls this workflow.
+  result:
+    name: Tests result
+    needs: tier1
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every suite job succeeded
+        env:
+          TIER1_RESULT: ${{ needs.tier1.result }}
+        run: |
+          echo "tier1: ${TIER1_RESULT}"
+          test "${TIER1_RESULT}" = "success"

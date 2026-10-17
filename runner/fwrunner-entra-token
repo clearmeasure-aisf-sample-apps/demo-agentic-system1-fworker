@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# fwrunner-entra-token: the bearer-token command of the Codex provider (runner/codex/config.toml.template, [model_providers.azure.auth]).
+# Codex runs it with no stdin whenever it needs a token (at start, every refresh_interval_ms, and after a 401) and reads the token from
+# stdout. It prints a Microsoft Entra access token for Azure OpenAI (resource https://cognitiveservices.azure.com) of the job's
+# user-assigned managed identity, from the Container Apps identity endpoint (IDENTITY_ENDPOINT, IDENTITY_HEADER; AZURE_CLIENT_ID picks
+# the identity). Key auth is off on the Foundry resource, so there is no API key anywhere. The endpoint caches tokens itself; this
+# script keeps no copy. FWRUNNER_TOKEN_RESOURCE overrides the resource (tests only). Exit 1 with a reason on stderr, never a partial token.
+set -u
+resource=${FWRUNNER_TOKEN_RESOURCE:-https://cognitiveservices.azure.com}
+if [ -z "${IDENTITY_ENDPOINT:-}" ] || [ -z "${IDENTITY_HEADER:-}" ]; then echo "fwrunner-entra-token: no managed identity endpoint (IDENTITY_ENDPOINT, IDENTITY_HEADER)" >&2; exit 1; fi
+case "$resource" in https://cognitiveservices.azure.com) enc='https%3A%2F%2Fcognitiveservices.azure.com' ;; *) enc=$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$resource") ;; esac
+case "${AZURE_CLIENT_ID:-}" in *[!0-9a-fA-F-]*) echo "fwrunner-entra-token: AZURE_CLIENT_ID is not a GUID" >&2; exit 1 ;; esac
+q="api-version=2019-08-01&resource=$enc"
+[ -n "${AZURE_CLIENT_ID:-}" ] && q="$q&client_id=$AZURE_CLIENT_ID"
+resp=$(curl -fsS --max-time 4 --retry 1 --retry-max-time 6 -H @<(printf 'X-IDENTITY-HEADER: %s\n' "$IDENTITY_HEADER") "$IDENTITY_ENDPOINT?$q") \
+    || { echo "fwrunner-entra-token: the identity endpoint refused or did not answer" >&2; exit 1; }
+tok=$(printf '%s' "$resp" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(JSON.parse(s).access_token||"")}catch{}})')
+[ -n "$tok" ] || { echo "fwrunner-entra-token: no access_token in the answer" >&2; exit 1; }
+printf '%s\n' "$tok"

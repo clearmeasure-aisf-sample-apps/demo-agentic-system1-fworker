@@ -1,0 +1,17 @@
+@startuml etf-start
+!include <C4/C4_Dynamic>
+title Dynamic: the owner presses Start factory (dashboard, MCP or CLI: one endpoint)
+Person(owner, "Owner")
+Container(gw, "fworker gateway", "ASP.NET Core", "factory state, dispatcher")
+Container(rjob, "role job", "Container Apps job", "plant-manager run")
+Container(wjob, "Codex worker job", "Container Apps job", "one execution per item and phase")
+System_Ext(gh, "GitHub", "board of the environment, refs/factory/<instance>")
+Rel(owner, gw, "POST /api/v1/factory/start (operator token), or MCP factory_start")
+Rel(gw, gh, "write factory-state ref: running; journal owner-action")
+Rel(gw, rjob, "start plant-manager run, ticket factory-started")
+Rel(gw, gh, "sweep: ready items sorted Functional Testing > Development > Technical Design > Todo")
+Rel(gw, wjob, "offer and start executions up to capacity")
+Rel(rjob, gw, "unpark, requeue, dispatch-hint, merge-now (policy-checked); done")
+Rel(wjob, gw, "verbs; end of phase frees a slot")
+Rel(gw, wjob, "dispatch the next ready item, closest to Done first")
+@enduml

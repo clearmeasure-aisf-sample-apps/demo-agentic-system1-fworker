@@ -1,0 +1,197 @@
+# The logical architecture of every release (added by the demo-environment skill; the kit owns this file and
+# .github/architecture/write-architecture.ps1). After a green Build of the default branch, beside the Release:
+#   - reads the build's artifact without running it: a container image's entrypoint and the files of its working
+#     directory (docker create and docker cp, never docker run), or the published files of the work-order app's UI
+#     package
+#   - writes what the artifact starts and the assemblies of the solution that process loads, with the references
+#     between them and the NuGet packages each references (write-architecture.ps1, from the entry assembly's deps.json)
+#   - renders it as a C4 diagram with PlantUML (the release jar of a pinned version, checked against its SHA-256)
+#   - commits <deployable>/<version>.json, .puml and .svg to branch "architecture" of this repository
+# The system's health dashboard zooms from the application's box into the diagram of the version that runs, read from
+# this repository's public address. The version is the Release's: the Build run's MAJOR.MINOR.run_number.
+# Credentials: the workflow's own token only, to read the Build's artifact and to push the one branch. It signs in to
+# nothing else, and a failure here does not stop a release.
+name: Architecture
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types: [completed]
+    branches: [master, main]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: architecture
+  cancel-in-progress: false
+
+env:
+  PLANTUML_VERSION: "1.2026.8"
+  PLANTUML_SHA256: "5E1ECFA8ECD32C90B03BBF3B1EB6F020943F98AB0FCF4032BE31A0002EE2C462"
+
+jobs:
+  architecture:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Find the build's artifact
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          names=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/artifacts" --jq '[.artifacts[].name] | join(" ")')
+          artifact=none
+          case " $names " in *" container-image "*) artifact=container-image ;; *" churchbulletin-nuget-packages "*) artifact=churchbulletin-nuget-packages ;; esac
+          echo "artifact=$artifact" >> "$GITHUB_OUTPUT"
+          if [ "$artifact" = none ]; then echo "SKIP the Build run kept no image and no packages: nothing to describe"; fi
+
+      - name: Download the build's artifact
+        if: steps.find.outputs.artifact != 'none'
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ steps.find.outputs.artifact }}
+          path: ./artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      # The version the Release gives this build: the one the image was built as (container-image.version), or the
+      # Build run's MAJOR.MINOR.run_number.
+      - name: Version
+        if: steps.find.outputs.artifact != 'none'
+        id: version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $file = './artifact/container-image.version'
+          if ((Test-Path -LiteralPath $file) -and (Get-Content -LiteralPath $file -Raw).Trim() -match '^\d+\.\d+\.\d+$') {
+            $version = (Get-Content -LiteralPath $file -Raw).Trim()
+          }
+          else {
+            $workflow = Get-Content -LiteralPath .github/workflows/build.yml -Raw
+            $major = [regex]::Match($workflow, '(?m)^\s*MAJOR_VERSION:\s*(\d+)').Groups[1].Value
+            $minor = [regex]::Match($workflow, '(?m)^\s*MINOR_VERSION:\s*(\d+)').Groups[1].Value
+            if (-not $major -or -not $minor) { throw 'MAJOR_VERSION and MINOR_VERSION not found in build.yml' }
+            $version = "$major.$minor.${{ github.event.workflow_run.run_number }}"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      # The image is read, never run: its entrypoint and command from its configuration, and the files of the folder
+      # its process starts in.
+      - name: Read the image
+        if: steps.find.outputs.artifact == 'container-image'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          gunzip --stdout ./artifact/container-image.tar.gz | docker load
+          image="container-image:${VERSION}"
+          docker image inspect "$image" --format '{{join .Config.Entrypoint " "}} {{join .Config.Cmd " "}}' | sed 's/^ *//; s/ *$//' > ./command.txt
+          workdir=$(docker image inspect "$image" --format '{{.Config.WorkingDir}}')
+          mkdir -p ./app
+          if [ -n "$workdir" ] && [ "$workdir" != "/" ]; then
+            container=$(docker create "$image")
+            docker cp "${container}:${workdir}/." ./app
+            docker rm "$container" > /dev/null
+          else
+            echo "SKIP the image has no working directory of its own: its files are not read, the diagram has the process alone"
+          fi
+          echo "container image" > ./kind.txt
+
+      # The work-order app's UI as the Release publishes it: the files of its package. A repository whose Release
+      # builds an image runs it as a container, started as the Dockerfile says; one whose Release zips the files runs
+      # them on App Service, where the entry assembly is the one application of the folder.
+      - name: Read the UI package
+        if: steps.find.outputs.artifact == 'churchbulletin-nuget-packages'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $package = Get-ChildItem -Path ./artifact -Filter 'ChurchBulletin.UI.*.nupkg' | Select-Object -First 1
+          if (-not $package) { throw 'ChurchBulletin.UI package not found in the build artifact' }
+          Expand-Archive -LiteralPath $package.FullName -DestinationPath ./package-extract -Force
+          $dll = Get-ChildItem -Path ./package-extract -Filter 'ClearMeasure.Bootcamp.UI.Server.dll' -Recurse | Select-Object -First 1
+          if (-not $dll) { throw 'ClearMeasure.Bootcamp.UI.Server.dll not found in the UI package' }
+          New-Item -ItemType Directory -Path ./app -Force | Out-Null
+          Copy-Item -Path (Join-Path $dll.DirectoryName '*') -Destination ./app -Recurse -Force
+          $command = ''
+          $kind = 'App Service package'
+          # The repository has a Dockerfile either way: what says how this build is released is its Release, which
+          # builds an image from it or zips the files for App Service (cmdemo2, 2026-10-13: a zip was called an image).
+          $release = if (Test-Path -LiteralPath ./.github/workflows/release.yml -PathType Leaf) { Get-Content -LiteralPath ./.github/workflows/release.yml -Raw } else { '' }
+          if ((Test-Path -LiteralPath ./Dockerfile -PathType Leaf) -and $release -match '(?m)^\s*docker build\b') {
+            $kind = 'container image'
+            $start = @(Get-Content -LiteralPath ./Dockerfile | Where-Object { $_ -match '^\s*(ENTRYPOINT|CMD)\s' } | Select-Object -Last 1)
+            if ($start.Count -eq 1) { $command = (($start[0] -replace '^\s*(ENTRYPOINT|CMD)\s+', '') -replace '[\[\]",]', ' ' -replace '\s+', ' ').Trim() }
+          }
+          Set-Content -LiteralPath ./command.txt -Value $command -NoNewline
+          Set-Content -LiteralPath ./kind.txt -Value $kind -NoNewline
+
+      - name: Write the architecture
+        if: steps.find.outputs.artifact != 'none'
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          DEPLOYABLE: ${{ vars.DEPLOYABLE_NAME }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not $env:DEPLOYABLE) { throw 'The repository variable DEPLOYABLE_NAME is not set.' }
+          ./.github/architecture/write-architecture.ps1 -Folder ./app -Deployable $env:DEPLOYABLE -Version $env:VERSION -OutputFolder ./out `
+            -Command ((Get-Content -LiteralPath ./command.txt -Raw) ?? '').Trim() -Kind ((Get-Content -LiteralPath ./kind.txt -Raw) ?? '').Trim()
+
+      - name: Render the diagram
+        if: steps.find.outputs.artifact != 'none'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PLANTUML_SECURITY_PROFILE: SANDBOX
+        run: |
+          set -euo pipefail
+          jar="${RUNNER_TEMP}/plantuml-${PLANTUML_VERSION}.jar"
+          curl --fail --silent --show-error --location --retry 3 --output "$jar" \
+            "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
+          echo "${PLANTUML_SHA256}  ${jar}" | sha256sum --check --quiet -
+          java -Djava.awt.headless=true -jar "$jar" -tsvg -charset UTF-8 -nometadata -failfast2 "./out/${VERSION}.puml"
+          test -s "./out/${VERSION}.svg"
+
+      # One branch holds every version's three files. A push that another run got ahead of is fetched and made again.
+      - name: Commit to branch architecture
+        if: steps.find.outputs.artifact != 'none'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          DEPLOYABLE: ${{ vars.DEPLOYABLE_NAME }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4; do
+            rm -rf ./branch
+            if git fetch --quiet --depth 1 origin architecture 2> /dev/null; then
+              git worktree add --quiet --force ./branch FETCH_HEAD
+            else
+              git worktree add --quiet --force --detach ./branch
+              git -C ./branch checkout --quiet --orphan architecture
+              git -C ./branch rm --quiet -r --force . > /dev/null
+            fi
+            mkdir -p "./branch/${DEPLOYABLE}"
+            cp "./out/${VERSION}.json" "./out/${VERSION}.puml" "./out/${VERSION}.svg" "./branch/${DEPLOYABLE}/"
+            git -C ./branch add --all "${DEPLOYABLE}"
+            if git -C ./branch diff --cached --quiet; then echo "The architecture of ${DEPLOYABLE} ${VERSION} is on the branch already."; exit 0; fi
+            git -C ./branch commit --quiet --message "Architecture of ${DEPLOYABLE} ${VERSION}"
+            if git -C ./branch push --quiet origin HEAD:refs/heads/architecture; then
+              echo "Published the architecture of ${DEPLOYABLE} ${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "The branch moved while committing (attempt ${attempt} of 4); reading it again."
+            git worktree remove --force ./branch
+            sleep $((attempt * 5))
+          done
+          echo "::error::Branch architecture changed at each of four attempts to push."
+          exit 1

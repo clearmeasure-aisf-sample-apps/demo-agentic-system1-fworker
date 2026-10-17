@@ -1,0 +1,46 @@
+{
+  "mode": "auto",
+  "ladder": [
+    {
+      "name": "economy",
+      "model": "claude-haiku-5-5",
+      "effort": "xhigh"
+    },
+    {
+      "name": "standard",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    {
+      "name": "premium",
+      "model": "claude-opus-5-5",
+      "effort": "medium"
+    }
+  ],
+  "orchestrator": {
+    "startTier": 0,
+    "maxTier": 2
+  },
+  "subagent": {
+    "startTier": 0,
+    "maxTier": 2
+  },
+  "fixed": {
+    "orchestrator": {
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "subagent": {
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    }
+  },
+  "profiles": {
+    "testing": {
+      "model": "claude-haiku-5-5",
+      "effort": "low",
+      "escalate": false,
+      "comment": "The cheapest setting, for very simple tasks: docs-only changes, text replacement, automated exploratory and stress testing. Pinned: never climbs the ladder."
+    }
+  }
+}

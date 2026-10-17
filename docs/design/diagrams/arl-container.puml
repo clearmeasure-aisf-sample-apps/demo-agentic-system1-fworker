@@ -1,0 +1,26 @@
+@startuml arl-container
+!include <C4/C4_Container>
+LAYOUT_TOP_DOWN()
+title Container view: launch modes, agents and roles (agents-roles-launch.md)
+Person(owner, "Owner / operator", "admin token or Entra owner identity")
+Person(person, "Person with a manual session", "Codex, Claude Code, Copilot or Cursor CLI on any machine")
+System_Boundary(env, "Container Apps environment cae-cmdemo1-<env>") {
+  Container(gw, "Gateway ca-cmdemo1-<env>-fworker", "ASP.NET Core 10", "Plant, column state machine, policy, merges, budgets. Dispatcher decides the role and mints an r1 role token")
+  Container(mcp, "/mcp", "MCP Streamable HTTP", "The only tool surface for agents: tools filtered by the r1 role; prompts/ served as MCP prompts; next_event long-poll tool")
+  Container(prompts, "prompts/ (in the image)", "markdown + front matter", "rules and task order per role and phase; versioned with the gateway release")
+  Container(job, "Hosted job caj-cmdemo1-<env>-fwrunner", "Container Apps Job, one image, four agent CLIs", "fwrunner.sh: redeem nonce for r1, write the agent's MCP config, start the agent headless with a bootstrap prompt")
+}
+System_Ext(cursor, "Cursor Cloud Agents API", "api launch mode: agent runs in Cursor's VM against a GitHub repo")
+System_Ext(gh, "GitHub", "cmdemo1-workorders: board, issues, pull requests")
+System_Ext(models, "Model providers", "Azure OpenAI (Entra), Foundry / Anthropic, GitHub Copilot, Cursor")
+Rel(owner, gw, "dashboard, owner tools at /mcp", "HTTPS")
+Rel(person, mcp, "manual: asks for a role, gets granted or refused", "MCP + r1")
+Rel(gw, job, "hosted: starts an execution with a nonce and agent=", "ARM")
+Rel(job, mcp, "tools, prompts, events", "MCP + r1")
+Rel(gw, cursor, "api: POST launch with prompt and MCP config", "HTTPS, Cursor API key")
+Rel(cursor, mcp, "tools, prompts, events (public ingress)", "MCP + r1")
+Rel(gw, gh, "every write (verbs, merges)", "GitHub App")
+Rel(job, gh, "git push only for roles that push (git_credential tool)", "installation token")
+Rel(job, models, "model calls", "agent-specific auth")
+Rel(mcp, prompts, "reads")
+@enduml

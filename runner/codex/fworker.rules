@@ -1,0 +1,9 @@
+# execpolicy rules of the Codex session: the "deny" list of runner/settings.json as forbidden command prefixes. Prefix rules match from
+# the first token, so a deny in the middle of a command (git push origin --force) is not expressible here; GitHub branch protection and the
+# per-item installation token are the controls for those, as for Claude.
+prefix_rule(pattern=[["env", "/usr/bin/env", "/bin/env", "printenv", "/usr/bin/printenv", "/bin/printenv"]], decision="forbidden", justification="the environment holds the worker credential")
+prefix_rule(pattern=[["cat", "head", "tail", "less", "more", "strings", "xxd", "od"], ["/proc/self/environ", "/proc/1/environ", "/etc/fworker/settings.json", "/etc/fworker/codex/config.toml.template"]], decision="forbidden")
+prefix_rule(pattern=["git", "push", ["--force", "-f", "--force-with-lease", "--mirror", "--delete", "-d"]], decision="forbidden", justification="no force push or branch deletion")
+prefix_rule(pattern=["git", "push", "origin", ["master", "main", "HEAD:master", "HEAD:main", "refs/heads/master", "refs/heads/main"]], decision="forbidden", justification="never push to the default branch")
+prefix_rule(pattern=[["wget", "nc", "ncat", "scp", "ssh", "sudo", "su"]], decision="forbidden")
+prefix_rule(pattern=["git", "push", ["-u", "--set-upstream"], "origin", ["master", "main", "HEAD:master", "HEAD:main", "refs/heads/master", "refs/heads/main"]], decision="forbidden", justification="never push to the default branch")

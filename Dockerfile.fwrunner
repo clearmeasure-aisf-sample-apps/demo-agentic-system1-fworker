@@ -1,0 +1,89 @@
+# The cloud worker runtime: one factory worker session per container lifetime (docs/design/cloud-worker-runtimes.md, sections 2.2 and 2.3).
+# A Container Apps Job execution runs runner/fwrunner.sh, which redeems its nonce at the gateway, downloads the plugin, clones the work-orders
+# repository, and runs one headless agent session: Claude Code in auto mode with runner/settings.json, or Codex CLI with runner/codex/ (FWRUNNER_AGENT=codex).
+# Build context = the root of the repository:  docker build -f Dockerfile.fwrunner -t fwrunner .
+# "Runner" is the worker container; it is unrelated to gateway/RunnerPool.cs.
+#
+# The pinned versions are the ARGs below; build.yml builds this image only when this file, runner/** or tests/runner/** change, and tags it
+# fwrunner:<CLAUDE_CODE_VERSION>-<build>. The image holds no credential and no connect prompt: the worker token is redeemed at run time
+# from a one-time nonce, the model credential is the job's managed identity (Entra; FWRUNNER_AGENT=codex uses Azure OpenAI), and git pushes use a per-item token fetched
+# by runner/git-credential-fworker.
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+ARG PWSH_VERSION=7.5.4
+ARG NODE_VERSION=22.23.3
+ARG CLAUDE_CODE_VERSION=2.1.300
+# Codex CLI (FWRUNNER_AGENT=codex): 0.155.1 is the version Microsoft validated with gpt-6-sol on Azure OpenAI
+# (learn.microsoft.com/azure/foundry/openai/how-to/codex, ms.date 2026-09-03)
+ARG CODEX_VERSION=0.155.1
+# the Playwright version of the work-orders acceptance tests (Microsoft.Playwright.NUnit 1.54.0): its browser revision is the one baked in
+ARG PLAYWRIGHT_VERSION=1.54.0
+# false leaves the browsers out (a smaller image for local proofs of the entrypoint; the released image always has them)
+ARG WITH_PLAYWRIGHT=true
+# true restores the NuGet packages of demo-agentic-system1-workorders master into the image (about 0.8 GB more; restores in the job are then fast)
+ARG WARM_NUGET=false
+ARG WARM_NUGET_REPO=https://github.com/clearmeasure-aisf-sample-apps/demo-agentic-system1-workorders.git
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=1 \
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0 \
+    POWERSHELL_TELEMETRY_OPTOUT=1 \
+    POWERSHELL_UPDATECHECK=Off \
+    DISABLE_AUTOUPDATER=1 \
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+
+# tools: git, sqlite3, curl, tar, ca-certificates, tini (PID 1, so TERM reaches fwrunner.sh and claude)
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl git sqlite3 tar xz-utils tini libicu-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# PowerShell, as in the gateway image (the SDK base ships a pwsh of its own as a dotnet tool; /usr/bin/pwsh is pointed at the pinned one)
+RUN curl -fsSL "https://github.com/PowerShell/PowerShell/releases/download/v${PWSH_VERSION}/powershell-${PWSH_VERSION}-linux-x64.tar.gz" -o /tmp/pwsh.tgz \
+    && mkdir -p /opt/microsoft/powershell \
+    && tar -xzf /tmp/pwsh.tgz -C /opt/microsoft/powershell \
+    && chmod +x /opt/microsoft/powershell/pwsh \
+    && ln -sf /opt/microsoft/powershell/pwsh /usr/bin/pwsh \
+    && rm -f /tmp/pwsh.tgz
+
+# node 22, Claude Code and Codex CLI at pinned versions (the npm registry is reached only here, at image build)
+RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o /tmp/node.txz \
+    && tar -xJf /tmp/node.txz -C /usr/local --strip-components=1 --exclude='*.md' --exclude=LICENSE \
+    && rm -f /tmp/node.txz \
+    && npm install -g --no-fund --no-audit "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "@openai/codex@${CODEX_VERSION}" \
+    && npm cache clean --force \
+    && claude --version \
+    && codex --version
+
+# Playwright Chromium with its OS dependencies, shared by every user of the image
+RUN if [ "$WITH_PLAYWRIGHT" = "true" ]; then \
+        npx --yes "playwright@${PLAYWRIGHT_VERSION}" install --with-deps chromium \
+        && chmod -R a+rX "$PLAYWRIGHT_BROWSERS_PATH" \
+        && rm -rf /var/lib/apt/lists/* /root/.npm; \
+    else mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"; fi
+
+# fworker files: root-owned and read-only for the session (settings.json is the reviewed auto-mode policy, design 2.7)
+COPY runner/settings.json runner/connect-prompt.template.md /etc/fworker/
+COPY runner/codex/ /etc/fworker/codex/
+COPY runner/fwrunner.sh /usr/local/bin/fwrunner.sh
+COPY runner/git-credential-fworker runner/fwrunner-entra-token /usr/local/bin/
+RUN chmod 0755 /etc/fworker /etc/fworker/codex /usr/local/bin/fwrunner.sh /usr/local/bin/git-credential-fworker /usr/local/bin/fwrunner-entra-token \
+    && chmod 0644 /etc/fworker/settings.json /etc/fworker/connect-prompt.template.md /etc/fworker/codex/* \
+    && git config --system credential.https://github.com.helper /usr/local/bin/git-credential-fworker \
+    && git config --system credential.https://github.com.useHttpPath false \
+    && mkdir -p /work && chown "$APP_UID" /work
+
+# the non-root user of the base image (app, $APP_UID)
+USER $APP_UID
+ENV HOME=/home/app \
+    FWRUNNER_HOME=/work
+WORKDIR /work
+
+# warm NuGet layer (optional): a restore of the work-orders master, then the clone is removed; only ~/.nuget/packages stays
+RUN if [ "$WARM_NUGET" = "true" ]; then \
+        git clone --depth 1 "$WARM_NUGET_REPO" /tmp/warm \
+        && dotnet restore /tmp/warm/src/ChurchBulletin.sln \
+        && rm -rf /tmp/warm; \
+    fi
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/fwrunner.sh"]

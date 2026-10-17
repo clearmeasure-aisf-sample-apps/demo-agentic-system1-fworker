@@ -1,0 +1,21 @@
+@startuml arl-hosted-session
+!include <C4/C4_Dynamic>
+LAYOUT_LEFT_RIGHT()
+title Dynamic view: one hosted session gets a role, its prompt and its tools
+Container(disp, "Dispatcher", "gateway, Plant.cs", "column state machine, slots, policy")
+Container(rt, "Runtime adapter", "gateway/Runtimes", "CaeJobRuntime + agent adapter")
+Container(job, "Hosted execution", "fwrunner image", "fwrunner.sh + one agent CLI")
+Container(auth, "Role tokens", "gateway/Auth.cs", "r1 mint, verify, revoke")
+Container(mcp, "/mcp", "gateway", "tool filter by role, prompts, next_event")
+Container(plant, "Plant + rule scripts", "gateway", "verbs, guard rails, GitHub writes")
+Rel(disp, rt, "1. item 412 phase development needs role worker; agent codex, mode hosted")
+Rel(rt, job, "2. ARM start: FWRUNNER_AGENT=codex, nonce, gateway URL")
+Rel(job, auth, "3. redeem nonce once")
+Rel(auth, job, "4. r1{role=worker, phase=development, item=412, mode=hosted, agent=codex, env=tdd, exp}")
+Rel(job, mcp, "5. initialize; tools/list returns only worker tools")
+Rel(job, mcp, "6. prompts/get worker/development (version v)")
+Rel(job, mcp, "7. next_event long-poll: item.assigned")
+Rel(job, mcp, "8. tool calls: item_accept, item_open_pr, git_credential ...")
+Rel(mcp, plant, "9. same endpoint as the verb; refusals unchanged")
+Rel(job, mcp, "10. next_event: session.end; agent exits, r1 revoked")
+@enduml

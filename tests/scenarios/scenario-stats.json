@@ -1,0 +1,1263 @@
+{
+  "qc-gate-grace": {
+    "qc: gate a stale environment is torn down after timing.qcGraceMinutes unless a Reset comes first": {
+      "tier": "full",
+      "checks": 34,
+      "seconds": 88.4
+    }
+  },
+  "qc-gate-lifetime": {
+    "qc: gate an environment is torn down at the lifetime cap even when it is in use": {
+      "tier": "full",
+      "checks": 18,
+      "seconds": 36.6
+    }
+  },
+  "qc-gate-idle": {
+    "qc: gate an idle environment is torn down after timing.qcIdleMinutes, and a touch restarts the idle timer": {
+      "tier": "full",
+      "checks": 23,
+      "seconds": 47.2
+    }
+  },
+  "qc-gate-waiting": {
+    "qc: gate a Start that finds no worker journals qc-waiting after the delay and then once per repeat interval": {
+      "tier": "full",
+      "checks": 18,
+      "seconds": 51.0
+    }
+  },
+  "auto": {
+    "red CI blocks, pending CI is accepted then advanced by the sweep": {
+      "tier": "full",
+      "checks": 10,
+      "seconds": 30.6
+    },
+    "gates refuse what they should": {
+      "tier": "full",
+      "checks": 17,
+      "seconds": 26.4
+    },
+    "verdict gates and demotion": {
+      "tier": "fast",
+      "checks": 13,
+      "seconds": 19.8
+    },
+    "happy-docs-only (auto policy)": {
+      "tier": "fast",
+      "checks": 18,
+      "seconds": 19.8
+    },
+    "docs-only change finishes even when no release run ever appears": {
+      "tier": "full",
+      "checks": 9,
+      "seconds": 23.5
+    },
+    "master red once: failed jobs are re-run, then the item proceeds": {
+      "tier": "full",
+      "checks": 10,
+      "seconds": 23.5
+    },
+    "model ladder: loops escalate the tier, never back down": {
+      "tier": "full",
+      "checks": 19,
+      "seconds": 32.7
+    },
+    "code change: release candidate, Release Queue, production, Done": {
+      "tier": "full",
+      "checks": 13,
+      "seconds": 23.0
+    },
+    "testing profile: the cheapest model, pinned even when the item loops": {
+      "tier": "full",
+      "checks": 6,
+      "seconds": 14.2
+    },
+    "merge conflict demotes": {
+      "tier": "full",
+      "checks": 10,
+      "seconds": 14.2
+    },
+    "merge ladder: out-of-date branch is updated and merged": {
+      "tier": "full",
+      "checks": 10,
+      "seconds": 35.1
+    },
+    "video label: PASS without an MP4 is downgraded": {
+      "tier": "full",
+      "checks": 8,
+      "seconds": 15.8
+    },
+    "docs-only mismatch: a docs PR without the marker is refused": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 10.2
+    },
+    "docs-only fast path: one design review round, a second only for a finding that quotes the item": {
+      "tier": "fast",
+      "checks": 22,
+      "seconds": 27.7
+    },
+    "docs-only fast path: the build is not owed only with the marker and documentation files; Functional Testing reads the diff": {
+      "tier": "fast",
+      "checks": 43,
+      "seconds": 74.9
+    }
+  },
+  "qc-proxy": {
+    "qc: behind a known proxy the right-most hop is the client, and the left hops cannot be chosen by the client": {
+      "tier": "full",
+      "checks": 11,
+      "seconds": 26.9
+    },
+    "qc: a second click from another address reuses the environment and records no person": {
+      "tier": "full",
+      "checks": 13,
+      "seconds": 23.5
+    }
+  },
+  "peer-approved": {
+    "inspector requests changes: the item goes back to Development": {
+      "tier": "full",
+      "checks": 11,
+      "seconds": 18.2
+    },
+    "a push after approval invalidates it": {
+      "tier": "full",
+      "checks": 9,
+      "seconds": 16.3
+    },
+    "inspector approves, a different identity from the author; merge needs it": {
+      "tier": "full",
+      "checks": 17,
+      "seconds": 25.5
+    },
+    "the approver may not be the author": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 15.8
+    },
+    "text addressed to the reviewer, and a secret in the diff, are mandatory escalations": {
+      "tier": "full",
+      "checks": 18,
+      "seconds": 31.6
+    },
+    "a PASS verdict whose pull request is closed without merging is void: the sweep demotes the item": {
+      "tier": "full",
+      "checks": 9,
+      "seconds": 17.9
+    },
+    "mandatory escalation: the inspector cannot approve, the hold needs a named person": {
+      "tier": "full",
+      "checks": 19,
+      "seconds": 28.9
+    }
+  },
+  "merge-queue": {
+    "merge queue: a second merge waits until the first has its release candidate": {
+      "tier": "fast",
+      "checks": 19,
+      "seconds": 43.2
+    },
+    "merge queue: a documentation-only change neither waits in the queue nor holds a place in it": {
+      "tier": "full",
+      "checks": 24,
+      "seconds": 47.2
+    }
+  },
+  "owner": {
+    "owner: dashboard: a credential issued from the page connects a hand-made cloud session that then shows up": {
+      "tier": "full",
+      "checks": 7,
+      "seconds": 0.9
+    },
+    "owner: a draining worker receives nothing new": {
+      "tier": "full",
+      "checks": 3,
+      "seconds": 2.7
+    },
+    "owner: a worker:<name> label pins the item": {
+      "tier": "full",
+      "checks": 2,
+      "seconds": 2.4
+    },
+    "owner: tokens are scoped to one item, one role, one purpose": {
+      "tier": "full",
+      "checks": 6,
+      "seconds": 7.8
+    },
+    "owner: registration, directed assignment, token handling and the journal": {
+      "tier": "fast",
+      "checks": 12,
+      "seconds": 7.9
+    },
+    "owner: an assignment nobody accepts is offered to the next worker": {
+      "tier": "full",
+      "checks": 4,
+      "seconds": 9.2
+    },
+    "owner: the owner continues from Technical Design into Development without a new assignment": {
+      "tier": "full",
+      "checks": 9,
+      "seconds": 17.4
+    },
+    "owner: a refused credential is visible on the event stream, not only on stderr": {
+      "tier": "full",
+      "checks": 3,
+      "seconds": 0.8
+    },
+    "owner: the operator sets a worker capacity, a worker cannot, and it survives a reconnect": {
+      "tier": "full",
+      "checks": 5,
+      "seconds": 1.7
+    },
+    "msg: messaging and the supervisor are off by default": {
+      "tier": "fast",
+      "checks": 58,
+      "seconds": 32.8
+    },
+    "owner: a pinned item is only ever offered to its worker: after a missed accept, while it is at capacity, and while it is offline": {
+      "tier": "fast",
+      "checks": 13,
+      "seconds": 39.1
+    },
+    "runner: a second run is refused while one is active, a short disk is refused, -Force overrides, and pwsh exit 139 is reported as a crash": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 3.9
+    },
+    "owner: an item that waits for its pinned worker has matched first, once however many sweeps pass, and offered after it when the worker comes": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 13.1
+    },
+    "owner: with a slow GitHub the journal of an item still reads matched, offered, assigned, and the offer is not held back by it": {
+      "tier": "full",
+      "checks": 2,
+      "seconds": 27.6
+    },
+    "owner: an accept that waited for a slow journal does not let its offer lapse: the item is not offered again while it is being accepted": {
+      "tier": "full",
+      "checks": 4,
+      "seconds": 34.7
+    }
+  },
+  "qc-worker": {
+    "qc: worker stop kills the application and the watcher and removes everything": {
+      "tier": "full",
+      "checks": 19,
+      "seconds": 29.6
+    },
+    "qc: worker a different sha is refused and nothing is left behind": {
+      "tier": "full",
+      "checks": 19,
+      "seconds": 25.0
+    },
+    "qc: worker build failure and build timeout are reported with the log tail": {
+      "tier": "full",
+      "checks": 28,
+      "seconds": 50.5
+    },
+    "qc: worker teardown from the gateway stops the application and removes the directory": {
+      "tier": "full",
+      "checks": 18,
+      "seconds": 26.9
+    },
+    "qc: worker the watcher reports a killed application and exits": {
+      "tier": "full",
+      "checks": 18,
+      "seconds": 34.9
+    },
+    "qc: worker runs a pull request end to end and the gateway marks it ready": {
+      "tier": "fast",
+      "checks": 38,
+      "seconds": 42.4
+    },
+    "qc: worker a reset supersedes the old environment and its watcher stops it": {
+      "tier": "full",
+      "checks": 21,
+      "seconds": 40.1
+    },
+    "qc: worker re-reports the URL after a gateway restart": {
+      "tier": "full",
+      "checks": 14,
+      "seconds": 37.9
+    },
+    "qc: worker the scrubbed environment drops credentials even when the profile asks for them": {
+      "tier": "full",
+      "checks": 16,
+      "seconds": 30.7
+    },
+    "qc: worker spawn mode starts a headless QC session for the job and fails the job when it ends early": {
+      "tier": "full",
+      "checks": 17,
+      "seconds": 25.9
+    },
+    "qc: worker a loopback or missing address is never reported as the URL": {
+      "tier": "full",
+      "checks": 28,
+      "seconds": 57.7
+    },
+    "qc: worker a second environment while at capacity waits for the first to stop": {
+      "tier": "full",
+      "checks": 23,
+      "seconds": 52.3
+    },
+    "qc: worker port clash picks the next port and three clashes fail with port-busy": {
+      "tier": "full",
+      "checks": 37,
+      "seconds": 74.0
+    }
+  },
+  "qc": {
+    "qc: eligible item gets one offer comment on the PR and on the item, and no job": {
+      "tier": "full",
+      "checks": 20,
+      "seconds": 13.7
+    },
+    "qc: auto-merge, docs-only and fork items get no offer": {
+      "tier": "full",
+      "checks": 33,
+      "seconds": 10.9
+    },
+    "qc: a GET of the link has no side effect": {
+      "tier": "full",
+      "checks": 18,
+      "seconds": 2.8
+    },
+    "qc: Start is required before any job exists": {
+      "tier": "full",
+      "checks": 21,
+      "seconds": 12.5
+    },
+    "qc: forged links are refused with 403": {
+      "tier": "full",
+      "checks": 23,
+      "seconds": 2.2
+    },
+    "qc: an expired link is refused with 410": {
+      "tier": "full",
+      "checks": 12,
+      "seconds": 2.1
+    },
+    "qc: a stale link offers the current link and queues nothing": {
+      "tier": "full",
+      "checks": 18,
+      "seconds": 4.4
+    },
+    "qc: cross-origin and malformed posts are refused": {
+      "tier": "full",
+      "checks": 27,
+      "seconds": 6.7
+    },
+    "qc: /qc is not served on the webhook port": {
+      "tier": "full",
+      "checks": 14,
+      "seconds": 2.5
+    },
+    "qc: happy path from Start to ready and on to teardown, with the link, the journal and the checks on the stored state": {
+      "tier": "fast",
+      "checks": 34,
+      "seconds": 3.3
+    },
+    "qc: clicking twice reuses the environment": {
+      "tier": "full",
+      "checks": 16,
+      "seconds": 5.0
+    },
+    "qc: two simultaneous Starts make one record and one job": {
+      "tier": "full",
+      "checks": 12,
+      "seconds": 4.6
+    },
+    "qc: a QC accept and a refused release leave the owner of the item alone": {
+      "tier": "full",
+      "checks": 19,
+      "seconds": 10.6
+    },
+    "qc: a started QC assignment survives the next sweeps": {
+      "tier": "full",
+      "checks": 15,
+      "seconds": 23.4
+    },
+    "qc: hostile text cannot corrupt the state comment or the pages": {
+      "tier": "full",
+      "checks": 24,
+      "seconds": 3.5
+    },
+    "qc: URL rules: loopback, userinfo, scheme and the declared address": {
+      "tier": "full",
+      "checks": 23,
+      "seconds": 4.0
+    },
+    "qc: a private address is accepted when the worker declared it, and the unverified path": {
+      "tier": "full",
+      "checks": 40,
+      "seconds": 12.2
+    },
+    "qc: reset makes a new attempt, a new assignment and kills the old token": {
+      "tier": "full",
+      "checks": 20,
+      "seconds": 4.5
+    },
+    "qc: teardown asks the worker to stop and ends when it confirms": {
+      "tier": "full",
+      "checks": 19,
+      "seconds": 4.5
+    },
+    "qc: a QC token can do nothing but its own job": {
+      "tier": "full",
+      "checks": 33,
+      "seconds": 5.4
+    },
+    "qc: heartbeats and status polls write nothing to GitHub and do not lose fields": {
+      "tier": "full",
+      "checks": 17,
+      "seconds": 10.2
+    },
+    "qc: a new head marks the environment stale and rebuilds nothing": {
+      "tier": "full",
+      "checks": 16,
+      "seconds": 10.7
+    },
+    "qc: a closed pull request tears the environment down": {
+      "tier": "full",
+      "checks": 14,
+      "seconds": 4.7
+    },
+    "qc: webhooks for pull requests and reviews become events": {
+      "tier": "full",
+      "checks": 11,
+      "seconds": 3.9
+    },
+    "qc: restart while the environment is ready recovers it": {
+      "tier": "full",
+      "checks": 29,
+      "seconds": 19.0
+    },
+    "qc: a Start that found no worker keeps its place across a restart": {
+      "tier": "full",
+      "checks": 12,
+      "seconds": 8.8
+    },
+    "qc: configuration guards": {
+      "tier": "full",
+      "checks": 6,
+      "seconds": 3.4
+    },
+    "qc: capacity, memory and worker choice": {
+      "tier": "full",
+      "checks": 34,
+      "seconds": 13.0
+    },
+    "qc: dashboard data calls need the operator token and the page stays anonymous": {
+      "tier": "fast",
+      "checks": 23,
+      "seconds": 2.8
+    },
+    "qc: dashboard list shows available, ready, failed and stale rows": {
+      "tier": "full",
+      "checks": 43,
+      "seconds": 13.4
+    },
+    "qc: dashboard escapes hostile titles, reasons, authors, urls and addresses": {
+      "tier": "full",
+      "checks": 17,
+      "seconds": 4.0
+    },
+    "qc: dashboard Start, Reset and Tear down use the operator token and record the operator": {
+      "tier": "full",
+      "checks": 19,
+      "seconds": 3.7
+    },
+    "qc: dashboard Start by the operator is the only way past a trust confirmation": {
+      "tier": "full",
+      "checks": 14,
+      "seconds": 2.0
+    },
+    "qc: dashboard Reassign moves the assignment and mints a new assignment id": {
+      "tier": "full",
+      "checks": 31,
+      "seconds": 10.0
+    },
+    "qc: dashboard qc-touch extends the lease only in memory": {
+      "tier": "full",
+      "checks": 21,
+      "seconds": 6.3
+    },
+    "qc: dashboard worker rows carry the QC column from the registration fields": {
+      "tier": "full",
+      "checks": 16,
+      "seconds": 4.4
+    },
+    "qc: dashboard connect prompt generator has the QC environment setup box and flags": {
+      "tier": "fast",
+      "checks": 10,
+      "seconds": 0.1
+    },
+    "qc: gate under the auto policy nothing changed: the label is required and QC is not a gate": {
+      "tier": "full",
+      "checks": 21,
+      "seconds": 4.0
+    },
+    "qc: runner pool a pooled call returns the exit code, stdout and stderr of a process call": {
+      "tier": "fast",
+      "checks": 18,
+      "seconds": 4.7
+    },
+    "qc: runner pool no state of a call reaches the next call": {
+      "tier": "fast",
+      "checks": 9,
+      "seconds": 1.4
+    },
+    "qc: runner pool a killed worker is replaced and calls keep working": {
+      "tier": "fast",
+      "checks": 9,
+      "seconds": 6.0
+    },
+    "qc: runner pool the gateway answers the same with and without the pool": {
+      "tier": "fast",
+      "checks": 12,
+      "seconds": 5.9
+    },
+    "qc: runner pool a call that does not finish in time fails as a process call does, and its worker is replaced": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 8.5
+    }
+  },
+  "qc-gate": {
+    "qc: gate a reset keeps the record of the run for the same head": {
+      "tier": "full",
+      "checks": 14,
+      "seconds": 27.9
+    },
+    "qc: gate a person's approval wakes the owner with qc.approved (webhook and sweep), a dismissal clears it, and the retried merge succeeds": {
+      "tier": "full",
+      "checks": 45,
+      "seconds": 64.7
+    },
+    "qc: gate a push to a new head needs a new QC run and a new approval": {
+      "tier": "full",
+      "checks": 28,
+      "seconds": 43.7
+    },
+    "qc: gate the requirements can be switched off in the configuration": {
+      "tier": "full",
+      "checks": 21,
+      "seconds": 32.6
+    },
+    "qc: gate Auto Merge items are unaffected under peer-approved": {
+      "tier": "full",
+      "checks": 12,
+      "seconds": 15.5
+    },
+    "qc: gate a non-auto-merge PASS stays on the approval path; merge needs a QC run, then a person, then merges": {
+      "tier": "fast",
+      "checks": 26,
+      "seconds": 37.6
+    },
+    "qc: gate documentation-only items are exempt from the QC run but not from the approval": {
+      "tier": "full",
+      "checks": 12,
+      "seconds": 18.5
+    },
+    "qc: gate an Auto Merge label added to an item with a live environment tears the environment down": {
+      "tier": "full",
+      "checks": 22,
+      "seconds": 42.3
+    }
+  },
+  "author": {
+    "author app: the gateway acts as the App, mints once, caches the token and never needs GH_TOKEN": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 3.4
+    },
+    "author app: state written by an earlier identity is adopted, then continued in the App's own comment": {
+      "tier": "full",
+      "checks": 5,
+      "seconds": 3.8
+    },
+    "plugin: a downloaded copy follows the gateway and a working copy is never touched": {
+      "tier": "full",
+      "checks": 8,
+      "seconds": 1.7
+    },
+    "plugin: the package names no maintainer path and no preinstalled tool": {
+      "tier": "fast",
+      "checks": 2,
+      "seconds": 0.2
+    },
+    "plugin: a downloaded plugin runs on a machine with nothing else": {
+      "tier": "full",
+      "checks": 4,
+      "seconds": 1.8
+    }
+  },
+  "qc-rate": {
+    "qc: the 11th click from one address in an hour is rate limited, and a spoofed X-Forwarded-For does not bypass it": {
+      "tier": "full",
+      "checks": 15,
+      "seconds": 25.6
+    }
+  },
+  "qc-gate-lease": {
+    "qc: gate a lost lease relaunches the environment on another worker, up to timing.qcMaxRelaunches, then fails no-worker": {
+      "tier": "full",
+      "checks": 31,
+      "seconds": 61.7
+    }
+  },
+  "qc-gate-race": {
+    "qc: gate a teardown racing a sweep never brings the assignment back and capacity is freed (repeated)": {
+      "tier": "full",
+      "checks": 45,
+      "seconds": 110.6
+    }
+  },
+  "messaging": {
+    "msg: the gateway refuses messaging without owner mode": {
+      "tier": "fast",
+      "checks": 2,
+      "seconds": 0.5
+    },
+    "msg: the supervisor needs messaging and refuses to start without it": {
+      "tier": "fast",
+      "checks": 2,
+      "seconds": 0.4
+    },
+    "msg: messaging warns that a scale-to-zero environment holds messages": {
+      "tier": "fast",
+      "checks": 1,
+      "seconds": 0.0
+    },
+    "msg: reserved names are refused in any case, at every entry point": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 0.7
+    },
+    "msg: registration values outside the list are refused before anything is recorded": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 0.0
+    },
+    "msg: a worker token reaches only its own stream, and a forged one is refused": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 0.5
+    },
+    "msg: every stream event id is <epoch>.<seq>, and a cursor of this epoch replays only newer events, merged by seq": {
+      "tier": "fast",
+      "checks": 9,
+      "seconds": 2.2
+    },
+    "msg: no cursor, a bare number or another epoch replays every undelivered message and the whole buffer": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 16.2
+    },
+    "msg: sends racing reconnects lose nothing and repeat nothing": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 8.8
+    },
+    "msg: a second client with the same name replaces the first, which exits 40 instead of reconnecting": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 7.8
+    },
+    "msg: the client stops on a refusal instead of retrying": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 1.3
+    },
+    "msg: presence is a heartbeat of the session's own credential": {
+      "tier": "fast",
+      "checks": 11,
+      "seconds": 7.7
+    },
+    "msg: a restarted client does not print a message it printed before (seen set per epoch)": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 2.9
+    },
+    "msg: a replayed item.assigned is printed but neither saves a token nor spawns a worker": {
+      "tier": "fast",
+      "checks": 6,
+      "seconds": 4.5
+    },
+    "msg: the seen set of one name never touches another name that shares its prefix": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 1.2
+    },
+    "msg: requests of a name outside allowedWorkers leave no presence entry": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 0.4
+    },
+    "msg: a stale numeric or old-epoch Last-Event-ID after a gateway restart still delivers": {
+      "tier": "full",
+      "checks": 5,
+      "seconds": 6.6
+    },
+    "msg: send reaches only the recipient, and the sender sees each state": {
+      "tier": "fast",
+      "checks": 13,
+      "seconds": 5.6
+    },
+    "msg: a poll-only session receives without a stream, is woken at once, and is not assigned work": {
+      "tier": "fast",
+      "checks": 13,
+      "seconds": 7.0
+    },
+    "msg: a body never names the sender: forged-sender is refused, and honest use is not": {
+      "tier": "fast",
+      "checks": 11,
+      "seconds": 0.1
+    },
+    "msg: the wrong credential, the wrong name or the wrong fields are refused": {
+      "tier": "fast",
+      "checks": 41,
+      "seconds": 0.5
+    },
+    "msg: a text over a size limit is refused and nothing is stored": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 0.0
+    },
+    "msg: text that looks like a credential is refused, and ordinary words about tokens pass": {
+      "tier": "fast",
+      "checks": 24,
+      "seconds": 0.1
+    },
+    "msg: a retry with the same clientId delivers once, per sender": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 0.0
+    },
+    "msg: the operator writes to a worker, and a worker sees it as the operator": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 0.8
+    },
+    "msg: replay of undelivered messages, delivered versus handled, and idempotent acknowledgement": {
+      "tier": "fast",
+      "checks": 20,
+      "seconds": 5.8
+    },
+    "msg: a cursor of this epoch delivers only the newer messages of a real send": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 2.5
+    },
+    "msg: wait-event --messages returns a trigger and a message together, and times out with neither": {
+      "tier": "fast",
+      "checks": 10,
+      "seconds": 8.4
+    },
+    "msg: a send wakes every poller of the recipient at once": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 2.4
+    },
+    "msg: injected text stays inside the text of one envelope line": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 2.3
+    },
+    "msg: the strip set is applied to every printed field": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 1.2
+    },
+    "msg: a text aimed at the model is flagged and withheld, and read with inbox --id": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 1.0
+    },
+    "msg: a message never changes an item, an assignment or the verb count": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 7.5
+    },
+    "msg: the traffic log and the refusal ring are the operator's, and hold the text only of what was accepted": {
+      "tier": "fast",
+      "checks": 10,
+      "seconds": 0.0
+    },
+    "msg: a muted or closed session is told, and still receives what it may": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 0.0
+    },
+    "msg: the credential carries presence only when it is the session itself": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 0.0
+    },
+    "msg: the test seam refuses a body over 64 KB": {
+      "tier": "fast",
+      "checks": 2,
+      "seconds": 0.0
+    },
+    "msg: limits from the config, a burst, the minute, a pair, and expiry": {
+      "tier": "full",
+      "checks": 13,
+      "seconds": 33.3
+    },
+    "msg: queue caps count undelivered peer notes only, and an operator note is exempt": {
+      "tier": "full",
+      "checks": 8,
+      "seconds": 2.5
+    },
+    "msg: 200 real sends racing 20 reconnects lose nothing and repeat nothing": {
+      "tier": "full",
+      "checks": 5,
+      "seconds": 9.1
+    },
+    "msg: the inbox, the acknowledgement, the state and the verbs refuse the wrong caller and the wrong arguments": {
+      "tier": "fast",
+      "checks": 29,
+      "seconds": 0.5
+    },
+    "msg: a message already printed is not printed again, and its lost acknowledgement is repeated": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 1.3
+    },
+    "msg: no message text is in any gateway log or any item comment": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 3.2
+    },
+    "msg: a gateway restart voids the inbox cursor, and a long poll rides it out": {
+      "tier": "full",
+      "checks": 7,
+      "seconds": 18.6
+    },
+    "msg: a long text is shown to 1,000 characters, and the whole of it is read with inbox --id": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 1.3
+    },
+    "msg: the presence verb sets the summary, once in ten seconds, and refuses a credential in it": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 0.2
+    },
+    "msg: the heartbeat is not starved by spawn watchers, restarts when its job ended, and a queued job is not duplicated": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 5.1
+    },
+    "msg: FACTORY_HEARTBEAT_SECONDS=0 is floored to one second": {
+      "tier": "fast",
+      "checks": 1,
+      "seconds": 5.1
+    },
+    "msg: the peer list shows the sessions a worker may see, with nothing of addresses, tokens or ids": {
+      "tier": "fast",
+      "checks": 25,
+      "seconds": 3.5
+    },
+    "msg: a broadcast reaches every allowed peer except the sender, in part where a recipient refuses": {
+      "tier": "fast",
+      "checks": 18,
+      "seconds": 3.0
+    },
+    "msg: the owner and the inspector of one item cannot message each other, and a broadcast skips the other": {
+      "tier": "fast",
+      "checks": 11,
+      "seconds": 0.9
+    },
+    "msg: an item thread reaches the QC worker of the owner's item and never the inspector": {
+      "tier": "fast",
+      "checks": 14,
+      "seconds": 0.3
+    },
+    "msg: headless inspector and QC processes get the item token, never the worker credential": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 4.5
+    },
+    "msg: a body with a duplicate key is a usage refusal, never a server error": {
+      "tier": "fast",
+      "checks": 6,
+      "seconds": 0.0
+    },
+    "msg: wait-event --messages drops a stale cursor, and exits 21 when all it got was printed before": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 1.7
+    },
+    "msg: a held questions lock does not swallow a message that was recorded as seen": {
+      "tier": "fast",
+      "checks": 1,
+      "seconds": 10.2
+    },
+    "msg: the question endpoints answer manager-disabled while the supervisor is off": {
+      "tier": "fast",
+      "checks": 2,
+      "seconds": 0.0
+    },
+    "msg: online, away and offline follow the configured windows": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 24.8
+    },
+    "msg: a QC job whose item token is missing spawns nothing and says so": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 4.2
+    },
+    "msg: the operator sets a session's messaging mode, a session cannot set its own, and the operator sees sessions that are on no list": {
+      "tier": "fast",
+      "checks": 14,
+      "seconds": 0.5
+    },
+    "msg: the operator switches messaging off and on while sessions run: they are told once, the heartbeat stops and starts, inboxes are discarded": {
+      "tier": "fast",
+      "checks": 20,
+      "seconds": 12.6
+    },
+    "msg: the status counts messages by state and refusals by code, and carries none of their text": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 0.0
+    },
+    "msg: spawned owner, inspector and QC processes never have FACTORY_SUPERVISOR_TOKEN in their environment": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 2.9
+    },
+    "msg: a worker spawned from the broadcast stream never has FACTORY_SUPERVISOR_TOKEN in its environment": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 5.8
+    },
+    "msg: a session whose client stopped is away, then offline, and online again when it is back": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 22.4
+    },
+    "msg: a thousand refused notes of one noisy sender do not push another sender's refusal out of the ring": {
+      "tier": "fast",
+      "checks": 6,
+      "seconds": 0.4
+    }
+  },
+  "manager": {
+    "mgr: the supervisor name is reserved for the supervisor credential": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 0.1
+    },
+    "mgr: a supervisor token is checked against its name, its generation and its MAC": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 0.0
+    },
+    "mgr: the supervisor token opens no worker stream and no trigger wait, and downloads the plugin": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 0.0
+    },
+    "mgr: the supervisor reads items and PR checks, and writes nothing": {
+      "tier": "fast",
+      "checks": 14,
+      "seconds": 4.1
+    },
+    "mgr: only the operator issues a supervisor credential, and only for an allowed name": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 4.0
+    },
+    "mgr: the supervisor registers in its own slot with its declared model, never as a worker": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 2.6
+    },
+    "mgr: another supervisor name is refused while the first is heard, and the same name replaces its stream": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 0.0
+    },
+    "mgr: worker-token --role manager needs messaging on, and an absent tokenGeneration is 1": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 2.1
+    },
+    "mgr: manager.allowedAskers names nobody unless it is listed": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 0.5
+    },
+    "mgr: an idle heartbeating supervisor is not taken over; a silent one is, after mgrTakeoverSeconds": {
+      "tier": "full",
+      "checks": 4,
+      "seconds": 26.1
+    },
+    "mgr: ask records the question, says at once that no supervisor is there, and does not wait": {
+      "tier": "fast",
+      "checks": 6,
+      "seconds": 1.3
+    },
+    "mgr: ask --wait returns the answer as an envelope, once, and closes the question": {
+      "tier": "fast",
+      "checks": 11,
+      "seconds": 2.8
+    },
+    "mgr: ask --wait that gets no answer ends pending, and the operator can answer instead": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 4.6
+    },
+    "mgr: three open questions at most, one per item, six an hour": {
+      "tier": "fast",
+      "checks": 6,
+      "seconds": 0.5
+    },
+    "mgr: a question by the wrong credential, to the wrong size or with a secret is refused": {
+      "tier": "fast",
+      "checks": 13,
+      "seconds": 0.6
+    },
+    "mgr: the state of a message is its sender's: unknown, someone else's, and an earlier run's": {
+      "tier": "fast",
+      "checks": 10,
+      "seconds": 0.9
+    },
+    "mgr: the supervisor's only note target is the operator, it reads its own inbox, and cannot see the log": {
+      "tier": "fast",
+      "checks": 9,
+      "seconds": 0.0
+    },
+    "mgr: a verb-only supervisor is not shown as present, and asks find none": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 1.2
+    },
+    "mgr: open questions are asked once more after a gateway restart, by the stream and by the poll": {
+      "tier": "full",
+      "checks": 10,
+      "seconds": 6.5
+    },
+    "mgr: an ask --wait interrupted by a restart asks again once and returns the answer": {
+      "tier": "full",
+      "checks": 7,
+      "seconds": 21.3
+    },
+    "mgr: a muted session may still ask, a session that is off may not": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 0.0
+    },
+    "mgr: workers are told once when the supervisor joins, again when its model changes, and when it has left": {
+      "tier": "fast",
+      "checks": 15,
+      "seconds": 15.3
+    },
+    "mgr: questions leave as one batch per window, wait while a batch is unanswered, and split at batchMax": {
+      "tier": "fast",
+      "checks": 14,
+      "seconds": 22.2
+    },
+    "mgr: questions asked before the supervisor connects arrive on connect, and a supervisor that starts again gets the open ones, split at batchMax": {
+      "tier": "fast",
+      "checks": 9,
+      "seconds": 4.4
+    },
+    "mgr: the first answer wins between the operator and the supervisor, and a wrong answer or caller is refused": {
+      "tier": "fast",
+      "checks": 25,
+      "seconds": 0.9
+    },
+    "mgr: a directive reaches one worker, an announcement every worker session once, and the supervisor's sends have their own limit": {
+      "tier": "fast",
+      "checks": 22,
+      "seconds": 7.5
+    },
+    "mgr: an unanswered question turns late, escalates once with one journal comment on an item its asker owns, and is moot when the asker loses the item": {
+      "tier": "fast",
+      "checks": 18,
+      "seconds": 20.8
+    },
+    "mgr: the escalation comment waits out a busy item lock and is posted when the lock frees": {
+      "tier": "full",
+      "checks": 3,
+      "seconds": 63.4
+    },
+    "mgr: a spent delivery budget stops the batches and tells the askers supervisor-budget": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 11.3
+    },
+    "mgr: text that comes from a message enters an item only as a marked block, which get-item labels and inspect-facts leaves out": {
+      "tier": "fast",
+      "checks": 29,
+      "seconds": 3.2
+    },
+    "mgr: the plant data follows the sweep and the verbs: waiting code, column and lease, activity per item, refusals, and an owner the sweep stops listing": {
+      "tier": "fast",
+      "checks": 17,
+      "seconds": 18.2
+    },
+    "mgr: a supervisor that was replaced by another name is refused, and its successor gets the open questions whatever cursor it sends": {
+      "tier": "fast",
+      "checks": 6,
+      "seconds": 11.3
+    },
+    "mgr: an owner is dropped only after the grace and two sweeps in a row that omit it; a settling or unread item keeps its owner": {
+      "tier": "fast",
+      "checks": 6,
+      "seconds": 5.6
+    },
+    "mgr: an idle plant sends no patrol; a stall is reported once per bucket and per item, a known wait is none, and activity clears it": {
+      "tier": "fast",
+      "checks": 15,
+      "seconds": 50.5
+    },
+    "mgr: an acknowledged patrol is muted, an unacknowledged one is repeated once, and a baseline is sent only when something needs a decision, once": {
+      "tier": "fast",
+      "checks": 25,
+      "seconds": 39.3
+    },
+    "mgr: the digest reports a disconnected owner, a late question, waiting, refusals and parks with gateway values only, flags what is new, and stays under its cap": {
+      "tier": "fast",
+      "checks": 15,
+      "seconds": 22.3
+    },
+    "mgr: questions cannot use the patrols' reserve, a spent budget drops patrols until the operator grants more, and the supervisor's steps are capped": {
+      "tier": "fast",
+      "checks": 20,
+      "seconds": 25.4
+    },
+    "mgr: a weak or undeclared model is flagged to the operator and the workers, and refused only when the gateway enforces it": {
+      "tier": "fast",
+      "checks": 11,
+      "seconds": 0.6
+    },
+    "mgr: a new owner does not inherit a sweep that missed the previous owner": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 4.6
+    },
+    "mgr: the day keeps the patrols' reserve too: questions stop 24 reserved deliveries short of the day's budget": {
+      "tier": "fast",
+      "checks": 2,
+      "seconds": 30.2
+    },
+    "mgr: the supervisor client runs the routine end to end: a batch as one envelope, one batch answer, a patrol, a note to the operator, one directive and the acknowledgement": {
+      "tier": "fast",
+      "checks": 60,
+      "seconds": 25.9
+    },
+    "mgr: the supervisor client reads items with its own credential, is refused every other verb in the gateway's words, and gets the plugin its prompt downloads": {
+      "tier": "fast",
+      "checks": 15,
+      "seconds": 1.5
+    },
+    "mgr: a supervisor credential that does not hold the slot is not heard: no presence, no inbox, no acknowledgement": {
+      "tier": "fast",
+      "checks": 6,
+      "seconds": 0.6
+    },
+    "mgr: a patrol delivered first does not use up the questions' share of the day": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 8.2
+    },
+    "mgr: switching messaging on after a long switch-off reports no owner as disconnected whose stream stayed open": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 21.7
+    },
+    "mgr: the dashboard shows sessions with the pinned supervisor, questions with an answer box, the traffic and the cost, and no session's text ever becomes markup": {
+      "tier": "fast",
+      "checks": 31,
+      "seconds": 9.1
+    },
+    "mgr: the connect prompts: the worker prompt gains the messaging rule only where messaging is on, and the supervisor prompt declares the model and never polls": {
+      "tier": "fast",
+      "checks": 10,
+      "seconds": 0.2
+    },
+    "mgr: the worker connect prompt with messaging off is byte for byte the one main produces, and gen-connect-prompt.sh still renders it": {
+      "seconds": 2.5,
+      "tier": "fast",
+      "checks": 28
+    },
+    "mgr: a real sweep keeps the owner of an item whose merge is settling and of an item it could not read, and drops the owner it no longer lists": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 23.6
+    },
+    "mgr: a session started with both FACTORY_TOKEN and FACTORY_SUPERVISOR_TOKEN is warned once at its start, and neither token is printed": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 1.7
+    },
+    "mgr: the supervisor credential is read from the keyring when the variable is not set": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 1.2
+    },
+    "mgr: a supervisor that only polls stays present, and one that stops is absent": {
+      "tier": "fast",
+      "checks": 4,
+      "seconds": 15.4
+    },
+    "mgr: no note, thread post or broadcast among workers ever reaches the supervisor": {
+      "tier": "fast",
+      "checks": 5,
+      "seconds": 4.6
+    },
+    "mgr: an answer, a directive and an operator note reach a session whose inbox is full of peer notes": {
+      "tier": "fast",
+      "checks": 7,
+      "seconds": 3.2
+    },
+    "mgr: an answer and a directive that say merge, approve and move to Done change nothing of the item, and the owner's merge is still refused by its gate": {
+      "tier": "fast",
+      "checks": 8,
+      "seconds": 14.7
+    },
+    "mgr: ten workers asking at their limit cost the supervisor the hour's budget and no more: ten question batches, two patrols, sixty steps": {
+      "tier": "fast",
+      "checks": 13,
+      "seconds": 34.3
+    },
+    "plant: an offer waits 120 seconds for its accept by default, and FACTORY_TIMING_assignAckSeconds overrides it": {
+      "tier": "fast",
+      "checks": 3,
+      "seconds": 2.0
+    },
+    "revoke: the operator revokes a name: every credential of it is refused, its stream ends, a new credential works, and a restart keeps it": {
+      "tier": "fast",
+      "checks": 28,
+      "seconds": 15.5
+    },
+    "mgr: the worker connect prompt with messaging off is the one main produces plus the stream note, and gen-connect-prompt.sh still renders it": {
+      "tier": "fast",
+      "checks": 31,
+      "seconds": 0.9
+    },
+    "mgr: an operator note reaches the supervisor as operator.note: queued until it connects, outside both budgets, and from the operator only": {
+      "tier": "fast",
+      "checks": 13,
+      "seconds": 7.2
+    },
+    "mgr: the operator's note to all reaches every worker and the supervisor once, and their replies come back with in_reply_to and are marked read": {
+      "tier": "fast",
+      "checks": 17,
+      "seconds": 4.4
+    },
+    "mgr: the dashboard has a Message control on every session row and the supervisor row, Message all, and an operator inbox with a reply box; hostile text never becomes markup": {
+      "tier": "fast",
+      "checks": 21,
+      "seconds": 20.5
+    }
+  }
+}

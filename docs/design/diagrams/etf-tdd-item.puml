@@ -1,0 +1,18 @@
+@startuml etf-tdd-item
+!include <C4/C4_Dynamic>
+title Dynamic: one tdd catalog item (docs-only) from seed to Done, no merge
+Person(owner, "Owner or operator role")
+Container(gw, "fworker tdd gateway", "ASP.NET Core")
+Container(wjob, "tdd Codex worker job", "Container Apps job")
+System_Ext(gh, "GitHub", "cmdemo1-workorders, tdd board")
+System_Ext(ci, "GitHub Actions", "prod's CI on the PR")
+Rel(owner, gw, "POST /api/v1/catalog/runs {docs-only}")
+Rel(gw, gh, "fixture branch factory-catalog/tdd/<run>; issue labelled factory worker, env:tdd, catalog; card in Technical Design")
+Rel(gw, wjob, "sweep: in scope, offer to cae-job, start execution")
+Rel(wjob, gw, "redeem nonce, accept, claim (refs/factory/factory-worker-tdd/claims/<n>)")
+Rel(wjob, gw, "open-pr: branch factory-worker/tdd/<n>-..., title [tdd]")
+Rel(gw, ci, "checks run on the PR")
+Rel(wjob, gw, "validation-verdict PASS")
+Rel(gw, gh, "mergePolicy none: comment 'tdd run complete, not merged by policy', close PR, delete branch, card to Done, close issue")
+Rel(owner, gw, "GET /api/v1/catalog/runs/<run>: docs-only pass")
+@enduml

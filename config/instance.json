@@ -1,0 +1,404 @@
+{
+  "name": "factory-worker",
+  "label": "factory worker",
+  "rivalLabel": "AI Factory",
+  "owner": "clearmeasure-aisf-sample-apps",
+  "ownerType": "organization",
+  "repo": "demo-agentic-system1-workorders",
+  "project": 686,
+  "defaultBranch": "master",
+  "columns": {
+    "ai": [
+      "Technical Design",
+      "Development",
+      "Functional Testing"
+    ],
+    "development": "Development",
+    "validation": "Functional Testing",
+    "hold": [
+      "Release Queue"
+    ],
+    "done": "Done"
+  },
+  "requiredBodySection": {
+    "Technical Design": "## Technical Design"
+  },
+  "reviewVerdictColumns": [
+    "Technical Design",
+    "Development"
+  ],
+  "ciGates": [
+    "Build result",
+    "secret-scan"
+  ],
+  "autoMergeLabel": "Auto Merge",
+  "videoLabel": "video",
+  "demoLabel": "Demo",
+  "holdLabels": ["hold:owner"],
+  "docsOnlyMarker": "<!-- aisf:docs-only -->",
+  "docsOnlyPaths": [
+    "^docs/.*\\.(md|txt|png|svg|puml)$",
+    "^(?!src/|\\.github/|\\.claude/|\\.cursor/|plugin/)(?!(.*/)?(CLAUDE|AGENTS)\\.md$)(.*/)?[^/]+\\.md$",
+    "^LICENSE(\\.md|\\.txt)?$",
+    "^\\.github/ISSUE_TEMPLATE/"
+  ],
+  "releaseCheckName": "release",
+  "masterFlakyChecks": ["^Acceptance Tests( \\(ARM SQLite\\))? \\[shard \\d+/\\d+\\]$"],
+  "masterIgnoredChecks": ["release", "packages", "architecture"],
+  "masterCodeChecks": ["Integration Build (SQL container)"],
+  "octopus": {
+    "url": "https://clearmeasure.octopus.app",
+    "space": "Spaces-415",
+    "project": "agentic1-ui",
+    "environments": {
+      "tdd": "tdd",
+      "uat": "uat",
+      "prod": "prod"
+    }
+  },
+  "plant": {
+    "oneItemPerSession": true
+  },
+  "intake": {
+    "enabled": false,
+    "fromColumn": "Todo",
+    "wipLimit": 6,
+    "holdLabels": ["Needs Human Review"]
+  },
+  "runner": {
+    "pool": 0,
+    "poolMaxCalls": 200,
+    "maxProcesses": 6
+  },
+  "github": {
+    "budgetReserve": 300
+  },
+  "schedule": {
+    "hostOwnedDefault": 0,
+    "hostBuildsDefault": 1,
+    "lowEffortCapacity": 1,
+    "buildSlotTtlSeconds": 1800,
+    "buildSlotMaxTtlSeconds": 7200,
+    "buildSlotDisconnectSeconds": 120,
+    "hosts": {},
+    "leaseRenewMinutes": 5,
+    "staleItemMinutes": 15,
+    "staleConfirmMinutes": 3,
+    "clientStartMinutes": 5,
+    "progressMaxMinutes": 180,
+    "continueMinutes": 3
+  },
+  "timing": {
+    "assignAckSeconds": 120,
+    "plantSnapshotMaxAgeMinutes": 30,
+    "plantSnapshotDebounceSeconds": 30,
+    "plantSnapshotRefreshMinutes": 10,
+    "leaderLeaseSeconds": 360,
+    "leaderRenewSeconds": 120,
+    "leaderCheckSeconds": 15,
+    "leaderHandoverSeconds": 90,
+    "gapRenewMaxMinutes": 120,
+    "leaseMinutes": 30,
+    "redChecksGate": 2,
+    "maxRelaunches": 3,
+    "maxSessionRelaunches": 10,
+    "maxReviewRounds": 3,
+    "docsOnlyMaxReviewRounds": 2,
+    "docsOnlyLegacyBefore": "2026-10-16T00:00:00Z",
+    "maxDemotions": 2,
+    "fixForwardMaxRounds": 4,
+    "sweepSeenCount": 2,
+    "mergeabilityWaitSeconds": 90,
+    "mergeabilityPollSeconds": 4,
+    "preMergeChecksWaitSeconds": 300,
+    "preMergeChecksPollSeconds": 16,
+    "outOfDateMergeAttempts": 4,
+    "updatedHeadWaitSeconds": 60,
+    "masterGreenTimeoutMinutes": 30,
+    "releaseCandidateTimeoutMinutes": 20,
+    "lateReleaseCandidateHours": 24,
+    "masterContainsLookback": 10,
+    "devChecksTimeoutMinutes": 30,
+    "verdictTimeoutMinutes": 180,
+    "unprocessedVerdictGraceMinutes": 3,
+    "passMergeGraceSeconds": 60,
+    "passUnmergedDigestMinutes": 5,
+    "offerMissLimit": 2,
+    "offerCoolDownMinutes": 5,
+    "parkHours": 24,
+    "pinFallbackMinutes": 30,
+    "autoUnparkMax": 3,
+    "awaitingChecksParkMinutes": 60,
+    "masterDefectCheckMinutes": 5,
+    "docsOnlyReleaseGraceSeconds": 120,
+    "qcLinkDays": 7,
+    "qcLeaseMinutes": 5,
+    "qcGraceMinutes": 30,
+    "qcIdleMinutes": 120,
+    "qcLifetimeMinutes": 480,
+    "qcMaxRelaunches": 3,
+    "qcWaitingRepeatMinutes": 30,
+    "qcTokenHours": 16,
+    "qcBuildCapMinutes": 8,
+    "msgTtlMinutes": 1440,
+    "mgrEscalateMinutes": 10,
+    "mgrPatrolMinutes": 10,
+    "mgrStallMinutes": 45,
+    "mgrLeaseWarnMinutes": 5,
+    "mgrDisconnectGraceMinutes": 5,
+    "mgrWaitingMinutes": 30,
+    "mgrBatchSeconds": 20,
+    "mgrInflightMinutes": 10,
+    "mgrEscalateRetrySeconds": 30,
+    "mgrEscalateRetryMinutes": 10,
+    "mgrOwnedGraceSeconds": 60,
+    "msgOnlineSeconds": 90,
+    "msgAwaySeconds": 600,
+    "msgOfflineListMinutes": 60,
+    "mgrTakeoverSeconds": 90,
+    "mgrBaselineMinutes": 30,
+    "mgrRemindMinutes": 60,
+    "mgrQuietMinutes": 20,
+    "mgrNoteMinutes": 60,
+    "mgrPersistMinutes": 30,
+    "mgrVerbErrorMinutes": 10,
+    "mgrRestartMinutes": 30,
+    "mgrReleaseQueueMinutes": 60,
+    "questionDedupeMinutes": 60,
+    "baseUpdateDebounceSeconds": 20,
+    "sweepMinSeconds": 60,
+    "journalWaitingMinutes": 30
+  },
+  "baseUpdate": {
+    "mode": "conflict-or-merge",
+    "enabled": true,
+    "autoUpdateBranch": true,
+    "autoUpdateDelaySeconds": 120,
+    "quietSeconds": 60,
+    "sweepCheckSeconds": 60
+  },
+  "qc": {
+    "trustProxy": false,
+    "knownProxies": [],
+    "rateLimitPerIp": 10,
+    "rateLimitPerPr": 20,
+    "probeTimeoutSeconds": 5,
+    "minFreeMb": 3500,
+    "maxEnvironments": 3,
+    "waitingDelaySeconds": 300,
+    "trustedAuthors": [],
+    "requireRun": null,
+    "requireApproval": null,
+    "allowLoopbackForTests": false
+  },
+  "api": {
+    "cursor": {
+      "enabled": false,
+      "maxConcurrent": 1,
+      "maxMinutes": 60,
+      "maxExecutionsPerDay": 10,
+      "ackSeconds": 900,
+      "apiUrl": "https://api.cursor.com",
+      "gatewayUrl": "",
+      "model": "auto",
+      "optimizeFor": "cost",
+      "repository": "https://github.com/clearmeasure-aisf-sample-apps/demo-agentic-system1-workorders",
+      "environments": {}
+    }
+  },
+  "auth": {
+    "legacyKinds": true
+  },
+  "messaging": {
+    "enabled": false,
+    "allowedWorkers": [],
+    "allowBroadcast": true,
+    "maxTextChars": 2000,
+    "ratePerMinute": 12,
+    "pairPer10Min": 10,
+    "perSenderQueueCap": 20,
+    "recipientQueueCap": 100,
+    "scaleToZeroEnvironments": ["tdd", "uat"]
+  },
+  "manager": {
+    "enabled": false,
+    "allowedNames": ["supervisor"],
+    "allowedAskers": [],
+    "tokenGeneration": 1,
+    "requiredModelTier": "premium",
+    "requiredEffort": "high",
+    "enforceModel": false,
+    "answerSlaSeconds": 120,
+    "maxOpenQuestionsPerWorker": 3,
+    "batchMax": 5,
+    "asksPerHour": 6,
+    "turnBudgetPerHour": 12,
+    "turnBudgetPerDay": 96,
+    "patrolReservePerHour": 2,
+    "stepBudgetPerHour": 60,
+    "digest": { "refusalCount": 3, "verbErrorCount": 3, "releaseQueueCount": 3, "waitCodes": ["qc-not-run", "qc-approval-missing", "held"], "maxBytes": 4096 },
+    "mode": "act",
+    "dailySummaryHourUtc": 7,
+    "actions": {
+      "perItemPerDay": 3,
+      "perHour": 30,
+      "policies": ["park-resolved", "stalled-owner", "pinned-worker-absent", "stuck-offer", "outside-blocker", "flaky-check", "repeated-question", "backlog-order", "load-balance", "operator-request"]
+    }
+  },
+  "operator": {
+    "enabled": false,
+    "allowedNames": ["operator-session"],
+    "tokenGeneration": 1,
+    "requiredModelTier": "premium",
+    "requiredEffort": "low",
+    "maxSelfMergesPerDay": 12
+  },
+  "keeper": {
+    "enabled": false,
+    "allowedNames": ["backlog-keeper"],
+    "tokenGeneration": 1,
+    "requiredModelTier": "premium",
+    "requiredEffort": "medium",
+    "maxNewItemsPerDay": 10,
+    "minTechnicalDesign": 3,
+    "newItemColumn": "Technical Design",
+    "jobCodes": ["same-criterion-repeated", "worker-failure", "fix-forward-exhausted", "demotion-limit", "watchdog-relaunch-budget", "verdict-failed", "stuck", "master-broken"],
+    "policies": ["criterion-dispute", "ambiguous-wording", "oversized-item", "compatibility-conflict", "flaky-test", "backlog-low", "dependency-order", "operator-request"]
+  },
+  "runtimes": {
+    "environments": {},
+    "preferConnected": true,
+    "routing": [],
+    "caeJob": {
+      "enabled": false,
+      "maxConcurrent": 0,
+      "maxExecutionsPerDay": 0,
+      "ackSeconds": 300,
+      "replicaTimeoutSeconds": 14400,
+      "maxFailuresPerPhase": 2,
+      "unhealthyAfterFailures": 2,
+      "listSeconds": 30,
+      "jobResourceId": "",
+      "armEndpoint": "https://management.azure.com",
+      "apiVersion": "2024-03-01",
+      "managedIdentityClientId": "",
+      "image": "",
+      "containerName": "fwrunner",
+      "cpu": 4,
+      "memory": "8Gi",
+      "gatewayUrl": "",
+      "agent": "claude",
+      "jobs": { "claude": "", "codex": "" }
+    }
+  },
+  "secrets": {
+    "patterns": [
+      "-----BEGIN [A-Z ]*PRIVATE KEY-----[\\s\\S]*?(-----END [A-Z ]*PRIVATE KEY-----|$)",
+      "gh[pousr]_[A-Za-z0-9]{20,}",
+      "xox[baprs]-[A-Za-z0-9-]{10,}",
+      "AKIA[0-9A-Z]{16}",
+      "\\b(w1|w2|m1|i1|q1|o1|k1|r1|n1)\\.[A-Za-z0-9_.-]{20,}",
+      "(?i)authorization:\\s*bearer\\s+[A-Za-z0-9._~+/=-]{20,}",
+      "(?i)\\b(bearer|token|secret|password|api[_-]?key)\\b\\s*[:=]\\s*([\"'][^\"']{8,}[\"']|[A-Za-z0-9+/_-]{20,}={0,2})"
+    ],
+    "redactOnly": [
+      "(?i)(bearer|token|secret|password|api[_-]?key)(\\s*[:=]\\s*|\\s+)[A-Za-z0-9._~+/=-]{12,}"
+    ]
+  },
+  "mergePolicy": "auto",
+  "humanApprovers": [],
+  "escalationMention": "",
+  "apps": {
+    "reviewer": "reviewer",
+    "testperson": "testperson"
+  },
+  "inspector": {
+    "maxFiles": 15,
+    "maxLines": 400,
+    "docsMaxFiles": 30,
+    "holdDays": 7,
+    "protectedPaths": [
+      "^\\.octopus/",
+      "^\\.github/workflows/",
+      "^\\.github/scripts/",
+      "^(build|PrivateBuild|AcceptanceTests|BuildFunctions)\\.ps1$",
+      "^build\\.(sh|bat)$",
+      "^Dockerfile$",
+      "^global\\.json$",
+      "^NuGet\\.Config$",
+      "^\\.gitleaks\\.toml$",
+      "^CODEOWNERS$",
+      "^\\.github/CODEOWNERS$"
+    ],
+    "packagePaths": [
+      "\\.csproj$",
+      "\\.props$",
+      "^packages\\.config$",
+      "package(-lock)?\\.json$"
+    ],
+    "migrationPaths": [
+      "^src/Database/scripts/"
+    ],
+    "binaryExtensions": [
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "dll",
+      "exe",
+      "zip",
+      "mp4",
+      "pdf",
+      "nupkg",
+      "pfx"
+    ],
+    "secretPatterns": [
+      "-----BEGIN [A-Z ]*PRIVATE KEY-----",
+      "AKIA[0-9A-Z]{16}",
+      "gh[pousr]_[A-Za-z0-9]{30,}",
+      "xox[baprs]-[A-Za-z0-9-]{10,}",
+      "(?i)(api[_-]?key|secret|password|token)\\s*[:=]\\s*['\\\"][^'\\\"]{8,}['\\\"]"
+    ],
+    "aiDirectedText": [
+      "(?i)ignore (all |any )?(previous|prior|above) (instructions|rules)",
+      "(?i)you (must|should) approve",
+      "(?i)approve this (pull request|pr)",
+      "(?i)system prompt",
+      "(?i)disregard (the )?(rules|gates|inspector)"
+    ]
+  },
+  "escalation": {
+    "comment": "tier = the highest tier any signal reaches; thresholds[i] is the value at which a signal asks for tier i+1. Monotonic within a column.",
+    "launches": [
+      2,
+      3
+    ],
+    "findingsRounds": [
+      2,
+      3
+    ],
+    "demotions": [
+      1,
+      2
+    ],
+    "fixForwardRounds": [
+      1,
+      2
+    ],
+    "refusals": [
+      3,
+      6
+    ],
+    "minTierByColumn": {}
+  },
+  "testLabel": "factory test",
+  "ownerHoldLabel": "hold:owner",
+  "priorityLabels": { "top": "priority:top", "high": "priority:high" },
+  "mergeQueueDepth": 0,
+  "gatewayMerge": true,
+  "ownerSessions": false,
+  "idleReleaseMinutes": 60,
+  "stateAuthors": [
+    "cm-ai-ops-bot"
+  ]
+}

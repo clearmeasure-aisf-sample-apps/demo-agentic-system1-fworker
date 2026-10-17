@@ -1,0 +1,287 @@
+# Build of a container deployable in a repository of its own (added by the demo-environment skill,
+# add-demo-deployable.ps1 -Container): the image of the Dockerfile at the root of the repository, built once per
+# commit and kept as the artifact container-image. After a green Build of the default branch, release.yml pushes that
+# same image and creates the release. Whatever the app needs before its image exists (restore, compile, tests) belongs
+# in the Dockerfile's build stages, or in jobs added here that "Build result" also needs.
+# The version is MAJOR_VERSION.MINOR_VERSION.<run number>; release.yml reads the two numbers from this file.
+#
+# Build secrets (opt-in). A Dockerfile that needs a secret while it builds (a token to restore private packages) reads
+# it as a BuildKit secret: RUN --mount=type=secret,id=<id> ..., never as ARG or ENV. The repository opts in by name,
+# in two places: its variable IMAGE_BUILD_SECRETS lists <BuildKit id>=<Actions secret name> pairs separated by spaces,
+# for example "packages_token=PACKAGES_TOKEN", and the step "Build the image" below gets each of those secrets in a
+# line of its own, BUILD_SECRET_<NAME>. The kit's template has no such line and names no secret of any app:
+# add-demo-deployable.ps1 -BuildSecret writes the lines when it creates the repository, and a secret added later is a
+# change to this file. The step hands the build only the named secrets, from files outside the build context that are
+# removed afterwards. A BuildKit secret is in no layer; the step still searches the saved image for each value and
+# fails when it finds one (a Dockerfile that copied it into ARG, ENV or a file).
+# A pull request from a fork gets no secrets from GitHub: its build stops at once and says so.
+#
+# Reusing the pull request's image (opt-in, repository variable REUSE_PR_IMAGE=true). The build after a merge makes
+# the same image again, from the same files. When the commit that arrived on the default branch has exactly the files
+# of the pull request's head (the same git tree: the branch was up to date when it merged, which a ruleset requirement
+# "branches up to date" makes the usual case), and that head's own Build succeeded and kept its image, this build
+# takes that image instead of making a new one, and the release gets the version that image was built as. Anything
+# else (a squash of a branch that was behind, a fork, an expired artifact, an image from before this file wrote its
+# version) builds as before. The files are the same, so the image is the one the integration build would make: its
+# tests and checks ran on the pull request's build of this very content.
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Read only, for the opt-in reuse of the pull request's image: the pull request of the commit, and its Build run.
+  actions: read
+  pull-requests: read
+
+env:
+  MAJOR_VERSION: 1
+  MINOR_VERSION: 0
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - name: Version
+        run: echo "VERSION=${MAJOR_VERSION}.${MINOR_VERSION}.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+
+      - name: Reuse the pull request's image
+        id: reuse
+        if: github.event_name == 'push' && vars.REUSE_PR_IMAGE == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "reused=false" >> "$GITHUB_OUTPUT"
+          api="repos/${GITHUB_REPOSITORY}"
+          pr=$(gh api "$api/commits/${GITHUB_SHA}/pulls" --jq '[.[] | select(.merged_at != null)] | first | .number // empty')
+          if [ -z "$pr" ]; then echo "No merged pull request for ${GITHUB_SHA}: the image is built."; exit 0; fi
+          head_sha=$(gh api "$api/pulls/$pr" --jq .head.sha)
+          head_repo=$(gh api "$api/pulls/$pr" --jq .head.repo.full_name)
+          if [ "$head_repo" != "$GITHUB_REPOSITORY" ]; then echo "Pull request $pr is from another repository: the image is built."; exit 0; fi
+          tree_pushed=$(gh api "$api/git/commits/${GITHUB_SHA}" --jq .tree.sha)
+          tree_head=$(gh api "$api/git/commits/${head_sha}" --jq .tree.sha)
+          if [ "$tree_pushed" != "$tree_head" ]; then
+            echo "The files of ${GITHUB_SHA} are not the files of the head of pull request $pr (${head_sha}): the image is built."
+            exit 0
+          fi
+          run=$(gh api "$api/actions/runs?event=pull_request&head_sha=${head_sha}&status=success&per_page=30" \
+            --jq '[.workflow_runs[] | select(.name == "Build")] | sort_by(.run_number) | last | .id // empty')
+          if [ -z "$run" ]; then echo "Pull request $pr has no successful Build of ${head_sha}: the image is built."; exit 0; fi
+          rm -rf "$RUNNER_TEMP/reuse"
+          if ! gh run download "$run" --repo "$GITHUB_REPOSITORY" --name container-image --dir "$RUNNER_TEMP/reuse" 2>/dev/null; then
+            echo "The image of Build run $run is not there (expired?): the image is built."; exit 0
+          fi
+          if [ ! -s "$RUNNER_TEMP/reuse/container-image.tar.gz" ] || [ ! -s "$RUNNER_TEMP/reuse/container-image.version" ]; then
+            echo "The image of Build run $run has no version file (made before this workflow wrote it): the image is built."; exit 0
+          fi
+          cp "$RUNNER_TEMP/reuse/container-image.tar.gz" container-image.tar.gz
+          cp "$RUNNER_TEMP/reuse/container-image.version" container-image.version
+          version=$(tr -d '[:space:]' < container-image.version)
+          echo "VERSION=${version}" >> "$GITHUB_ENV"
+          echo "reused=true" >> "$GITHUB_OUTPUT"
+          echo "Image ${version} of Build run $run (pull request $pr, ${head_sha}) is this commit's image: the files are the same, so it is not built again." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Build the image
+        if: steps.reuse.outputs.reused != 'true'
+        env:
+          BUILD_SECRETS: ${{ vars.IMAGE_BUILD_SECRETS }}
+          # One line per build secret gives this step that Actions secret, by its own name: BUILD_SECRET_<NAME>, with
+          # the expression secrets.<NAME> as its value. Never the whole secrets context (toJSON of secrets): GitHub
+          # has held every run of a Build that handed this step all of its secrets as "action required", with no job
+          # started.
+          # BUILD_SECRET_<NAME>: the lines go here (add-demo-deployable.ps1 -BuildSecret replaces this one)
+          FROM_FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          set -euo pipefail
+          test -f Dockerfile || { echo "No Dockerfile at the root of the repository."; exit 1; }
+          # Build secrets: one private file per named secret, outside the workspace (the build context), removed
+          # whatever happens. Names are printed; values never are.
+          secret_dir="$(mktemp -d "${RUNNER_TEMP:-/tmp}/build-secrets.XXXXXX")"
+          chmod 700 "$secret_dir"
+          trap 'rm -rf "$secret_dir"' EXIT
+          secret_args=()
+          for pair in ${BUILD_SECRETS:-}; do
+            id="${pair%%=*}"
+            name="${pair#*=}"
+            if [ "$id" = "$pair" ] || ! [[ "$id" =~ ^[A-Za-z0-9_.-]+$ ]] || ! [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+              echo "::error::IMAGE_BUILD_SECRETS: '$pair' is not <BuildKit id>=<Actions secret name>."
+              exit 1
+            fi
+            variable="BUILD_SECRET_${name^^}"
+            if [ -z "${!variable+set}" ]; then
+              echo "::error::IMAGE_BUILD_SECRETS names the build secret $name, and build.yml does not hand it to this step."
+              echo "Give the step \"Build the image\" of .github/workflows/build.yml the line $variable, with the expression secrets.${name^^} as its value."
+              exit 1
+            fi
+            (umask 077; printf '%s' "${!variable}" > "$secret_dir/$id")
+            if [ ! -s "$secret_dir/$id" ]; then
+              if [ "$FROM_FORK" = "true" ]; then
+                reason="GitHub gives no secrets to a pull request from a fork. A maintainer builds the change from a branch of this repository."
+              else
+                reason="this repository has no such secret, or this run may not read it (Dependabot). The operator sets it with the kit's set-demo-build-secret.ps1."
+              fi
+              echo "::error::This image needs the build secret $name (IMAGE_BUILD_SECRETS): $reason"
+              exit 1
+            fi
+            secret_args+=(--secret "id=$id,src=$secret_dir/$id")
+            echo "Build secret $id from the Actions secret $name"
+          done
+          # The values are in their files: no command after this line inherits them.
+          for variable in "${!BUILD_SECRET_@}"; do unset "$variable"; done
+          # The version and the commit travel with the image as labels; a Dockerfile that declares ARG VERSION gets
+          # the version at build time too (docker ignores a build argument the Dockerfile does not declare only with a
+          # warning, so it is passed only when declared).
+          version_arg=()
+          if grep -Eq '^\s*ARG\s+VERSION(=|\s|$)' Dockerfile; then version_arg=(--build-arg "VERSION=${VERSION}"); fi
+          docker build --file Dockerfile "${version_arg[@]}" "${secret_args[@]}" \
+            --label "org.opencontainers.image.version=${VERSION}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --tag "container-image:${VERSION}" .
+          docker save --output "$RUNNER_TEMP/container-image.tar" "container-image:${VERSION}"
+          # No build secret in the artifact: the saved image (its configuration and history, and its layers as far as
+          # they are stored uncompressed) is searched for every line of every secret that is long enough to be one.
+          for file in "$secret_dir"/*; do
+            [ -e "$file" ] || continue
+            if awk 'length($0) >= 12' "$file" | LC_ALL=C grep --quiet --text --fixed-strings --file=- "$RUNNER_TEMP/container-image.tar"; then
+              echo "::error::The image contains the value of the build secret $(basename "$file"): the Dockerfile copied it (ARG, ENV or a file)."
+              echo "Read a build secret only with RUN --mount=type=secret. The image is not kept."
+              rm -f "$RUNNER_TEMP/container-image.tar"
+              exit 1
+            fi
+          done
+          gzip --stdout "$RUNNER_TEMP/container-image.tar" > container-image.tar.gz
+          rm "$RUNNER_TEMP/container-image.tar"
+          # The version this image was built as: the release of a later Build that reuses the image takes it from here.
+          printf '%s\n' "${VERSION}" > container-image.version
+          echo "Image ${VERSION}: $(du -h container-image.tar.gz | cut -f1) compressed" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the image
+        uses: actions/upload-artifact@v7
+        with:
+          name: container-image
+          path: |
+            container-image.tar.gz
+            container-image.version
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  # The gateway's own tests (tests.yml: smoke and every scenario suite against the fake GitHub; no secret). For a pull request and a Build
+  # started by hand. The push that follows a merge does not run them again: that content passed them as the pull request.
+  tests:
+    if: github.event_name != 'push'
+    uses: ./.github/workflows/tests.yml
+    permissions:
+      contents: read
+
+  # The cloud worker runner image (Dockerfile.fwrunner, docs/design/cloud-worker-runtimes.md 2.3): built only when Dockerfile.fwrunner (which
+  # holds the pinned versions), runner/** or tests/runner/** changed, or when Build is started by hand. Tagged fwrunner:<claude-code version>-<run
+  # number>; the shell test of the entrypoint runs inside the built image. A push keeps the image as artifact fwrunner-image for release.yml.
+  fwrunner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Changed?
+        id: changed
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "workflow_dispatch" ]; then echo "build=true" >> "$GITHUB_OUTPUT"; echo "Started by hand: the runner image is built."; exit 0; fi
+          if [ "$EVENT" = "pull_request" ]; then base="$BASE_SHA"; else base="$BEFORE"; fi
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "build=true" >> "$GITHUB_OUTPUT"; echo "No base commit to compare with: the runner image is built."; exit 0
+          fi
+          files=$(git diff --name-only "$base" "$GITHUB_SHA" -- Dockerfile.fwrunner runner tests/runner)
+          if [ -n "$files" ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"; printf 'Runner files changed:\n%s\n' "$files"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"; echo "No runner file changed: the runner image is not built."
+          fi
+
+      - name: Build the runner image
+        if: steps.changed.outputs.build == 'true'
+        run: |
+          set -euo pipefail
+          claude=$(sed -nE 's/^ARG CLAUDE_CODE_VERSION=([0-9][0-9A-Za-z._-]*)$/\1/p' Dockerfile.fwrunner)
+          test -n "$claude" || { echo "::error::Dockerfile.fwrunner pins no ARG CLAUDE_CODE_VERSION"; exit 1; }
+          tag="${claude}-${GITHUB_RUN_NUMBER}"
+          echo "FWRUNNER_TAG=${tag}" >> "$GITHUB_ENV"
+          docker build --file Dockerfile.fwrunner \
+            --label "org.opencontainers.image.version=${tag}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --tag "fwrunner:${tag}" .
+          echo "Runner image fwrunner:${tag}: $(docker image inspect "fwrunner:${tag}" --format '{{.Size}}' | numfmt --to=iec) uncompressed" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Test the entrypoint inside the image
+        if: steps.changed.outputs.build == 'true'
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD:/src:ro" \
+            -e FWRUNNER_SH=/usr/local/bin/fwrunner.sh --entrypoint bash "fwrunner:${FWRUNNER_TAG}" /src/tests/runner/fwrunner.test.sh
+          docker run --rm --entrypoint bash "fwrunner:${FWRUNNER_TAG}" -c \
+            'set -e; claude --version; claude --help | grep -q -- --effort; pwsh --version; dotnet --version; node --version; sqlite3 --version; git --version; test "$(id -u)" != 0; test -x /usr/bin/tini; ls /ms-playwright | grep -q chromium; test ! -w /etc/fworker/settings.json'
+
+      - name: Save the runner image
+        if: steps.changed.outputs.build == 'true' && github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          docker save "fwrunner:${FWRUNNER_TAG}" | gzip > fwrunner-image.tar.gz
+          printf '%s\n' "${FWRUNNER_TAG}" > fwrunner-image.version
+          echo "Runner image saved: $(du -h fwrunner-image.tar.gz | cut -f1) compressed" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the runner image
+        if: steps.changed.outputs.build == 'true' && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: fwrunner-image
+          path: |
+            fwrunner-image.tar.gz
+            fwrunner-image.version
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  # The one check the default-branch ruleset requires: it reports the outcome of the image job and of the tests under a fixed name.
+  result:
+    name: Build result
+    needs: [image, tests, fwrunner]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: The image job succeeded
+        env:
+          IMAGE_RESULT: ${{ needs.image.result }}
+        run: |
+          echo "image: ${IMAGE_RESULT}"
+          test "${IMAGE_RESULT}" = "success"
+      - name: The tests succeeded (skipped only for a push)
+        env:
+          TESTS_RESULT: ${{ needs.tests.result }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          echo "tests: ${TESTS_RESULT} (${EVENT})"
+          test "${TESTS_RESULT}" = "success" || { test "${EVENT}" = "push" && test "${TESTS_RESULT}" = "skipped"; }
+      - name: The runner image job succeeded
+        env:
+          FWRUNNER_RESULT: ${{ needs.fwrunner.result }}
+        run: |
+          echo "fwrunner: ${FWRUNNER_RESULT}"
+          test "${FWRUNNER_RESULT}" = "success"

@@ -1,0 +1,34 @@
+{
+  "fast": {
+    "auto": 75.0,
+    "peer-approved": 25.0,
+    "merge-queue": 64.0,
+    "owner": 13.0,
+    "qc": 74.0,
+    "qc-worker": 61.0,
+    "qc-gate": 40.0,
+    "author": 9.0
+  },
+  "full": {
+    "auto": 395.0,
+    "peer-approved": 158.0,
+    "merge-queue": 94.0,
+    "owner": 206.0,
+    "qc": 294.0,
+    "qc-worker": 533.0,
+    "qc-gate": 287.0,
+    "qc-gate-idle": 51.0,
+    "qc-gate-lifetime": 41.0,
+    "qc-gate-grace": 92.0,
+    "qc-gate-lease": 66.0,
+    "qc-gate-waiting": 55.0,
+    "qc-gate-race": 115.0,
+    "qc-rate": 30.0,
+    "qc-proxy": 54.0,
+    "author": 15.0,
+    "messaging": 290.0,
+    "manager": 658.0
+  },
+  "wall-full": 1739.0,
+  "wall-fast": 108.0
+}

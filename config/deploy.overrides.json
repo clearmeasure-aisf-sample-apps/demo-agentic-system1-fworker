@@ -1,0 +1,50 @@
+{
+  "ownerSessions": true,
+  "mergeQueueDepth": 2,
+  "messaging": {
+    "enabled": true,
+    "allowedWorkers": [
+      "*"
+    ]
+  },
+  "manager": {
+    "enabled": true,
+    "allowedAskers": [
+      "*"
+    ]
+  },
+  "operator": {
+    "enabled": true
+  },
+  "api": {
+    "cursor": {
+      "enabled": true,
+      "maxConcurrent": 1,
+      "maxMinutes": 60,
+      "maxExecutionsPerDay": 6,
+      "model": "auto",
+      "optimizeFor": "cost",
+      "environments": {
+        "tdd": {
+          "gatewayUrl": "https://ca-agentic1-tdd-fworker.kindmushroom-29e23036.eastus2.azurecontainerapps.io"
+        }
+      }
+    }
+  },
+  "runtimes": {
+    "environments": {
+      "tdd": {
+        "preferConnected": true,
+        "routing": [
+          {
+            "phase": "*",
+            "runtime": "cursor-cloud"
+          }
+        ],
+        "caeJob": {
+          "enabled": false
+        }
+      }
+    }
+  }
+}

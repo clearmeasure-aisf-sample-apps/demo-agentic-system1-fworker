@@ -1,0 +1,39 @@
+# Codex CLI configuration of the fwrunner image when FWRUNNER_AGENT=codex. fwrunner.sh fills the placeholders (names in double braces) and writes the result
+# to $CODEX_HOME/config.toml of the execution. The counterpart of runner/settings.json for Claude Code.
+# Provider: Azure OpenAI v1 Responses API (no api-version), keyless: the bearer token comes from the auth command (Entra, managed identity).
+# Sources: https://learn.chatgpt.com/docs/config-file/config-advanced (command-backed auth), https://learn.chatgpt.com/docs/config-file/config-reference,
+# https://learn.microsoft.com/azure/foundry/openai/how-to/codex (base_url .../openai/v1, wire_api "responses"; ms.date 2026-09-03).
+model = "{{DEPLOYMENT}}"
+model_provider = "azure"
+model_reasoning_effort = "{{EFFORT}}"
+approval_policy = "never"
+sandbox_mode = "{{SANDBOX}}"
+project_doc_max_bytes = 262144
+check_for_update_on_startup = false
+
+[model_providers.azure]
+name = "Azure OpenAI (Entra)"
+base_url = "{{BASE_URL}}"
+wire_api = "responses"
+request_max_retries = 4
+stream_max_retries = 10
+stream_idle_timeout_ms = 300000
+
+[model_providers.azure.auth]
+command = "/usr/local/bin/fwrunner-entra-token"
+timeout_ms = 15000
+refresh_interval_ms = 600000
+
+[sandbox_workspace_write]
+writable_roots = ["/work", "/tmp"]
+network_access = true
+
+# the session's commands never see the identity endpoint (it would mint model and storage tokens) nor any Azure variable;
+# the factory variables stay (factory.ps1 needs FACTORY_TOKEN), as in the Claude session
+[shell_environment_policy]
+inherit = "all"
+ignore_default_excludes = true
+exclude = ["IDENTITY_*", "MSI_*", "AZURE_*", "CODEX_*", "OPENAI_*", "ANTHROPIC_*"]
+
+[features]
+multi_agent = false

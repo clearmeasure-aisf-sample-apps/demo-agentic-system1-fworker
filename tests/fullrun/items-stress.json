@@ -1,0 +1,162 @@
+[
+ {
+  "n": 11,
+  "file": "docs/ai-workers.md",
+  "from": "# AI Workers",
+  "to": "# AI Workers (reviewed)",
+  "test": null,
+  "title": "Stress 11: ai-workers.md"
+ },
+ {
+  "n": 12,
+  "file": "docs/automerge-a.md",
+  "from": "# Automerge A",
+  "to": "# Automerge A (reviewed)",
+  "test": null,
+  "title": "Stress 12: automerge-a.md"
+ },
+ {
+  "n": 13,
+  "file": "docs/automerge-b.md",
+  "from": "# Automerge B",
+  "to": "# Automerge B (reviewed)",
+  "test": null,
+  "title": "Stress 13: automerge-b.md"
+ },
+ {
+  "n": 14,
+  "file": "docs/board-columns.md",
+  "from": "# Board Columns",
+  "to": "# Board Columns (reviewed)",
+  "test": null,
+  "title": "Stress 14: board-columns.md"
+ },
+ {
+  "n": 15,
+  "file": "docs/branch-naming.md",
+  "from": "# Branch Naming Convention for Automated Agents",
+  "to": "# Branch Naming Convention for Automated Agents (reviewed)",
+  "test": null,
+  "title": "Stress 15: branch-naming.md"
+ },
+ {
+  "n": 16,
+  "file": "docs/ci-single-gate.md",
+  "from": "# CI: single merge gate (`build-result`)",
+  "to": "# CI: single merge gate (`build-result`) (reviewed)",
+  "test": null,
+  "title": "Stress 16: ci-single-gate.md"
+ },
+ {
+  "n": 17,
+  "file": "docs/consolidate-deploy-workflows-analysis.md",
+  "from": "# Analysis: Consolidating Deploy Workflows",
+  "to": "# Analysis: Consolidating Deploy Workflows (reviewed)",
+  "test": null,
+  "title": "Stress 17: consolidate-deploy-workflows-analysis.md"
+ },
+ {
+  "n": 18,
+  "file": "docs/crap-score-audit.md",
+  "from": "# CRAP Score Audit (crap4dotnet)",
+  "to": "# CRAP Score Audit (crap4dotnet) (reviewed)",
+  "test": null,
+  "title": "Stress 18: crap-score-audit.md"
+ },
+ {
+  "n": 19,
+  "file": "docs/crap4dotnet-measurement-2026-09-15.md",
+  "from": "# crap4dotnet \u2014 Plan and One-Time Baseline Measurement",
+  "to": "# crap4dotnet \u2014 Plan and One-Time Baseline Measurement (reviewed)",
+  "test": null,
+  "title": "Stress 19: crap4dotnet-measurement-2026-09-15.md"
+ },
+ {
+  "n": 20,
+  "file": "docs/environments.md",
+  "from": "# Environments",
+  "to": "# Environments (reviewed)",
+  "test": null,
+  "title": "Stress 20: environments.md"
+ },
+ {
+  "n": 21,
+  "file": "docs/glossary-ops.md",
+  "from": "# Operations Glossary",
+  "to": "# Operations Glossary (reviewed)",
+  "test": null,
+  "title": "Stress 21: glossary-ops.md"
+ },
+ {
+  "n": 22,
+  "file": "docs/mergeprobe-e.md",
+  "from": "# Merge Probe E",
+  "to": "# Merge Probe E (reviewed)",
+  "test": null,
+  "title": "Stress 22: mergeprobe-e.md"
+ },
+ {
+  "n": 23,
+  "file": "docs/prompt-locations.md",
+  "from": "# Prompt Locations",
+  "to": "# Prompt Locations (reviewed)",
+  "test": null,
+  "title": "Stress 23: prompt-locations.md"
+ },
+ {
+  "n": 24,
+  "file": "docs/qodana-gating-scope.md",
+  "from": "# Qodana Gating Scope (#9519)",
+  "to": "# Qodana Gating Scope (#9519) (reviewed)",
+  "test": null,
+  "title": "Stress 24: qodana-gating-scope.md"
+ },
+ {
+  "n": 25,
+  "file": "docs/qodana-remediation-work-plan.md",
+  "from": "# Qodana Remediation Work Plan",
+  "to": "# Qodana Remediation Work Plan (reviewed)",
+  "test": null,
+  "title": "Stress 25: qodana-remediation-work-plan.md"
+ },
+ {
+  "n": 26,
+  "file": "docs/ready-to-move.md",
+  "from": "# Ready To Move",
+  "to": "# Ready To Move (reviewed)",
+  "test": null,
+  "title": "Stress 26: ready-to-move.md"
+ },
+ {
+  "n": 27,
+  "file": "docs/release-cadence.md",
+  "from": "# Release Cadence",
+  "to": "# Release Cadence (reviewed)",
+  "test": null,
+  "title": "Stress 27: release-cadence.md"
+ },
+ {
+  "n": 28,
+  "file": "docs/retest-f.md",
+  "from": "# Retest F",
+  "to": "# Retest F (reviewed)",
+  "test": null,
+  "title": "Stress 28: retest-f.md"
+ },
+ {
+  "n": 29,
+  "file": "docs/stability-i.md",
+  "from": "# Stability I",
+  "to": "# Stability I (reviewed)",
+  "test": null,
+  "title": "Stress 29: stability-i.md"
+ },
+ {
+  "n": 30,
+  "file": "docs/stability-j.md",
+  "from": "# Stability J",
+  "to": "# Stability J (reviewed)",
+  "test": null,
+  "title": "Stress 30: stability-j.md"
+ }
+]

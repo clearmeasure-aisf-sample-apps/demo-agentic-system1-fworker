@@ -1,0 +1,24 @@
+# The timer of the gateway on Azure Container Apps express (decision 0055 of demo-agentic-platform-kit): the gateway
+# scales to zero, so its own sweep timer stops while nobody calls it. Every 15 minutes this workflow calls the health
+# address of each environment's gateway; the call starts it from zero, and its first sweep runs at start-up.
+name: wake
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  wake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Wake the gateways
+        shell: bash
+        run: |
+          set -u
+          for env in tdd uat prod; do
+            url="https://ca-agentic1-${env}-fworker.kindmushroom-29e23036.eastus2.azurecontainerapps.io/health"
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 "$url" || true)
+            echo "${env}: ${url} answered ${code}"
+          done

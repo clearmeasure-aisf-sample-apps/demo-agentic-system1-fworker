@@ -1,0 +1,54 @@
+# Changes to these paths need the owner's approval before they merge (the ruleset of the default branch requires a code owner review).
+# They are the areas the operator session must never merge by itself: plugin/skills/factory-operator/SKILL.md, rule c.
+# Only whole files can be listed here. Files that mix protected and ordinary lines (gateway/Program.cs, gateway/Messaging.cs,
+# gateway/Qc.cs, plugin/scripts/lib/Client.Own.ps1, config/instance.json, CLAUDE.md, docs/HANDOFF.md) are not listed: for those the
+# rule of the skill is the only guard.
+
+# credentials and tokens
+/gateway/Auth.cs                              @jeffreypalermo
+
+# the deployment pipeline and repository rules
+/.github/                                     @jeffreypalermo
+/Dockerfile                                   @jeffreypalermo
+/.dockerignore                                @jeffreypalermo
+/config/deploy.overrides.json                 @jeffreypalermo
+/config/apply-overrides.ps1                   @jeffreypalermo
+
+# the cloud worker runtime: the runner image, its entrypoint, auto-mode settings and prompt template, and the adapter that holds the ARM right
+/Dockerfile.fwrunner                          @jeffreypalermo
+/runner/                                      @jeffreypalermo
+/gateway/Runtimes/                            @jeffreypalermo
+
+# the operator session: its powers, its skill and guard rails, and the tests of them
+/gateway/Operator.cs                          @jeffreypalermo
+/plugin/skills/factory-operator/              @jeffreypalermo
+/plugin/scripts/lib/Client.Operator.ps1       @jeffreypalermo
+/plugin/scripts/lib/OperatorRelease.ps1       @jeffreypalermo
+/docs/design/operator-session.md              @jeffreypalermo
+/tests/scenarios/operator.ps1                 @jeffreypalermo
+
+# how sessions weigh what they are told
+/plugin/skills/factory-peer-messaging/        @jeffreypalermo
+/plugin/skills/factory-supervisor/            @jeffreypalermo
+
+# the plant manager's powers: its flow verbs and their guard rails
+/gateway/Manager.cs                           @jeffreypalermo
+/plugin/scripts/lib/Verbs.Manager.ps1         @jeffreypalermo
+/plugin/scripts/lib/Client.Manager.ps1        @jeffreypalermo
+/tests/scenarios/manager-actions.ps1          @jeffreypalermo
+
+# the backlog keeper: its powers, its guard rails, its skill and the owner's rules it follows
+/gateway/Keeper.cs                            @jeffreypalermo
+/plugin/scripts/lib/Verbs.Keeper.ps1          @jeffreypalermo
+/plugin/scripts/lib/Client.Keeper.ps1         @jeffreypalermo
+/plugin/skills/factory-backlog-keeper/        @jeffreypalermo
+/docs/owner-rules.md                          @jeffreypalermo
+/tests/scenarios/keeper.ps1                   @jeffreypalermo
+
+# the MCP tool surface (docs/design/agents-roles-launch.md 14): the role tool sets and the tools
+/gateway/Mcp/                                 @jeffreypalermo
+/prompts/common/                              @jeffreypalermo
+/prompts/bootstrap/                           @jeffreypalermo
+
+# uat and prod
+/docs/deploy/activate-prod.sh                 @jeffreypalermo

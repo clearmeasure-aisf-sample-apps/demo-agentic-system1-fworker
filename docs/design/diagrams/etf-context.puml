@@ -1,0 +1,24 @@
+@startuml etf-context
+!include <C4/C4_Context>
+title System context: three environment factories, every role started on demand by its gateway
+Person(owner, "Owner / operator", "Labels prod items, seeds catalogs on demand, approves protected changes, promotes uat and prod")
+Person_Ext(local, "Optional local clients", "omarchy tmux, Claude Code sessions: may connect, never required")
+System(tdd, "fworker tdd", "Acts on env:tdd only; tdd board; mergePolicy none; catalog")
+System(uat, "fworker uat", "Acts on env:uat only; uat board; mergePolicy none; catalog")
+System(prod, "fworker prod", "Acts on env:prod only; board 679; mergePolicy auto; settle and Release Queue")
+System_Ext(gh, "GitHub", "cmdemo1-workorders (one repo), three boards, Actions CI, one App per environment")
+System_Ext(aca, "Azure Container Apps", "Per environment: Codex worker job and role job")
+System_Ext(model, "Azure OpenAI gpt-6.1-sol", "Foundry resource per environment, Entra auth")
+System_Ext(octo, "Octopus Deploy", "Releases of cmdemo1 deployables (prod only acts on delivery)")
+Rel(owner, tdd, "catalog seed / report, operator token")
+Rel(owner, prod, "dashboard, operator token")
+Rel(local, prod, "optional connect prompt")
+Rel(tdd, gh, "env:tdd items, tdd board, factory-worker/tdd/* branches, no merge")
+Rel(uat, gh, "env:uat items, uat board, factory-worker/uat/* branches, no merge")
+Rel(prod, gh, "env:prod items, board 679, merges to master")
+Rel(tdd, aca, "start executions (ARM)")
+Rel(uat, aca, "start executions (ARM)")
+Rel(prod, aca, "start executions (ARM)")
+Rel(aca, model, "Codex CLI")
+Rel(prod, octo, "delivery state, read")
+@enduml

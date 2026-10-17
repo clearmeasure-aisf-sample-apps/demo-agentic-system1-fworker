@@ -1,0 +1,26 @@
+@startuml cwr-cae-container
+!include <C4/C4_Container>
+LAYOUT_TOP_DOWN()
+title Container view: Container Apps runtime (cae-cmdemo1-<env>)
+Person(owner, "Owner / operator")
+System_Boundary(env, "Container Apps environment cae-cmdemo1-tdd (rg-cmdemo1-nonprod)") {
+  Container(gw, "ca-cmdemo1-tdd-fworker", "ASP.NET Core 10, 1 replica", "Gateway + CaeJobRuntime: mints a nonce per execution, starts executions, maps session.end to job end")
+  Container(job, "caj-cmdemo1-tdd-fwrunner", "Container Apps Job, manual trigger, 4 vCPU / 8 GiB, D4 dedicated profile", "fwrunner image: Claude Code CLI, .NET 10 SDK, pwsh, git, SQLite, Playwright Chromium; entrypoint fwrunner.sh runs ONE session")
+  ContainerDb(files, "Azure Files share (optional)", "SMB/NFS", "NuGet and Playwright caches, read-mostly; worktrees stay on ephemeral disk")
+}
+Container_Ext(kv, "Key Vault kvcmdemo1tdd*", "gateway-only: GitHub App key and token secret; the runner reads nothing")
+Container_Ext(acr, "Container registry", "fworker and fwrunner images")
+Container_Ext(ai, "Application Insights + Log Analytics", "existing")
+System_Ext(gh, "GitHub", "repo, Actions, Apps")
+System_Ext(model, "Claude in Microsoft Foundry", "Foundry resource, Sonnet 5.5 Global Standard deployment")
+Rel(owner, gw, "dashboard")
+Rel(gw, job, "ARM: jobs/start with per-execution env (worker name, nonce, item)", "managed identity")
+Rel(job, gw, "SSE stream + verbs over internal FQDN", "HTTP(S)")
+Rel(job, gh, "clone, push branch", "installation token minted by gateway")
+Rel(job, model, "messages", "HTTPS, Entra token of runner UAMI (Foundry User)")
+Rel(job, files, "mount caches (optional)")
+Rel(gw, kv, "secret refs", "UAMI")
+Rel(job, ai, "OTel + console logs")
+Rel(gw, ai, "OTel")
+Rel(acr, job, "image pull", "UAMI AcrPull")
+@enduml

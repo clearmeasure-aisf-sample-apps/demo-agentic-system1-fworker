@@ -1,0 +1,6 @@
+{
+  "name": "factory-worker",
+  "version": "0.1.0",
+  "description": "A Claude session as a factory worker for the demo-agentic-system1-workorders board: skills carry the judgement, scripts (factory.ps1) enforce every gate through a gateway that holds the secrets.",
+  "author": { "name": "Clear Measure" }
+}

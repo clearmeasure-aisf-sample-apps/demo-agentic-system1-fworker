@@ -1,0 +1,12 @@
+[
+  { "n": 1,  "file": "src/UI.Shared/Pages/Index.razor",                 "from": "Welcome, Fellow Church Workers!",                    "to": "Welcome, Dear Church Workers!",                     "test": null },
+  { "n": 2,  "file": "src/UI.Shared/MainLayout.razor",                  "from": "Work Order Management",                              "to": "Work Order Administration",                         "test": null },
+  { "n": 3,  "file": "src/UI.Shared/Pages/FetchData.razor",             "from": "Perfect for outdoor events and exterior maintenance", "to": "Ideal for outdoor events and exterior maintenance", "test": null },
+  { "n": 4,  "file": "src/UI.Shared/Pages/Counter.razor",               "from": "Work orders completed",                              "to": "Completed work orders",                             "test": null },
+  { "n": 5,  "file": "src/UI/Client/Pages/ClientHealthCheck.razor",     "from": "Application Health Status",                          "to": "Application Health Summary",                        "test": null },
+  { "n": 6,  "file": "src/UI/Client/Pages/NotFound.razor",              "from": "Back to the home page",                              "to": "Return to the home page",                           "test": "src/UnitTests/UI.Client/NotFoundPageTests.cs" },
+  { "n": 7,  "file": "src/UI.Shared/Pages/Login.razor",                 "from": "Welcome to the Church Portal",                       "to": "Welcome to the Church Workers Portal",              "test": "src/UnitTests/UI.Shared/Pages/LoginPageTests.cs" },
+  { "n": 8,  "file": "src/UI.Shared/Components/LoginLink.razor",        "from": "Sign in to manage work orders",                      "to": "Sign in to manage your work orders",                "test": "src/UnitTests/UI.Shared/Components/LoginLinkTests.cs" },
+  { "n": 9,  "file": "src/UI.Shared/Components/Logout.razor",           "from": "Sign out of the work order application",            "to": "Sign out of the work order portal",                 "test": "src/UnitTests/UI.Shared/Components/LogoutTests.cs" },
+  { "n": 10, "file": "src/UI.Shared/Pages/WorkOrderSearch.razor",       "from": "Search all work orders",                             "to": "Search every work order",                           "test": "src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs" }
+]

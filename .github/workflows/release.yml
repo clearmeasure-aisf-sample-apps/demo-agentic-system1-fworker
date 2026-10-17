@@ -1,0 +1,151 @@
+# Release of a container deployable in a repository of its own (added by the demo-environment skill,
+# add-demo-deployable.ps1 -Container; a sibling of release.yml, which releases the work-order app's own packages).
+# After a green Build of the default branch, it turns that build's image into a release candidate:
+#   - the image <registry>/<slug>/<deployable>:<version> in the system's registry (Azure OIDC, id-<slug>-acr-push): the
+#     image the Build run made (artifact container-image), not a second build; its tag write-locked
+#   - a release <version> of the Octopus project <slug>-<deployable>; its lifecycle deploys it to the first environment
+# No package goes to the Octopus feed: the image is the whole artifact.
+# The version is the Build run's MAJOR.MINOR.run_number, the same number build.yml labels the image with.
+# Credentials: GitHub OIDC only (environment "release"). Deployments, approvals and the GitOps pin are Octopus's.
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types: [completed]
+    branches: [master, main]
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  # The Octopus actions (create-release) look the space up by name, not by ID.
+  OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
+
+jobs:
+  # Only a Build run that kept an image has something to release.
+  packages:
+    # A push to the default branch, or a Build of it started by hand: after a change to the Octopus deployment process
+    # (which a release snapshots), `gh workflow run Build` makes a new release without a code change.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    outputs:
+      found: ${{ steps.find.outputs.found }}
+    steps:
+      - name: Find the build's image
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          count=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/artifacts" \
+            --jq '[.artifacts[] | select(.name == "container-image")] | length')
+          if [ "$count" -gt 0 ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; fi
+
+  release:
+    needs: packages
+    if: needs.packages.outputs.found == 'true'
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download the build's image
+        uses: actions/download-artifact@v8
+        with:
+          name: container-image
+          path: ./image
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      # The version is the Build run's MAJOR.MINOR.run_number, or the one the image was built as (container-image.version
+      # in the artifact) when that Build reused a pull request's image (build.yml, REUSE_PR_IMAGE).
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $file = './image/container-image.version'
+          if ((Test-Path -LiteralPath $file) -and (Get-Content -LiteralPath $file -Raw).Trim() -match '^\d+\.\d+\.\d+$') {
+            $version = (Get-Content -LiteralPath $file -Raw).Trim()
+          }
+          else {
+            $workflow = Get-Content -LiteralPath .github/workflows/build.yml -Raw
+            $major = [regex]::Match($workflow, '(?m)^\s*MAJOR_VERSION:\s*(\d+)').Groups[1].Value
+            $minor = [regex]::Match($workflow, '(?m)^\s*MINOR_VERSION:\s*(\d+)').Groups[1].Value
+            if (-not $major -or -not $minor) { throw 'MAJOR_VERSION and MINOR_VERSION not found in build.yml' }
+            $version = "$major.$minor.${{ github.event.workflow_run.run_number }}"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_ACR_PUSH }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Push the image
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.SYSTEM_SLUG }}/${{ vars.DEPLOYABLE_NAME }}:${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          gunzip --stdout ./image/container-image.tar.gz | docker load
+          docker image inspect "container-image:${VERSION}" --format 'Loaded {{.Id}}'
+          docker tag "container-image:${VERSION}" "$IMAGE"
+          az acr login --name "${{ vars.ACR_NAME }}"
+          docker push "$IMAGE"
+          # A released image never changes: lock its tag (role "ACR tag lock" of the seed).
+          az acr repository update --name "${{ vars.ACR_NAME }}" --image "${{ vars.SYSTEM_SLUG }}/${{ vars.DEPLOYABLE_NAME }}:${VERSION}" \
+            --write-enabled false --delete-enabled false --output none
+          echo "Pushed $IMAGE" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Sign in to Octopus
+        uses: OctopusDeploy/login@v2
+        with:
+          server: ${{ vars.OCTOPUS_URL }}
+          service_account_id: ${{ vars.OCTOPUS_SERVICE_ACCOUNT_ID }}
+
+      # The commit's time goes into the release with its notes: the system's delivery facts (lead time) read it there
+      # and need not ask this repository for it, which they could not if it were private. Read with this run's own
+      # token, which reads this repository and no other.
+      - name: Read the commit's time
+        id: commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          committed=$(gh api "repos/${{ github.repository }}/commits/${{ github.event.workflow_run.head_sha }}" --jq .commit.committer.date)
+          echo "committed=$committed" >> "$GITHUB_OUTPUT"
+
+      # The private build's word (the kit's decisions 0046 and 0049): this release ships the Build's image unchanged,
+      # so the word goes into the release's notes, where the platform reads it. A Build that keeps no artifact
+      # "private-build" adds nothing, with a SKIP line: nothing fails.
+      - name: Take the private build's word into the notes
+        id: word
+        if: hashFiles('.github/private-build/add-private-build.ps1') != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download ${{ github.event.workflow_run.id }} --name private-build --dir word 2>&1 | Out-Null
+          ./.github/private-build/add-private-build.ps1 -NotesPath word/notes.txt -Word word/private-build.json -Run '${{ github.event.workflow_run.html_url }}'
+          if (Test-Path -LiteralPath word/notes.txt) { "line=. $(Get-Content -LiteralPath word/notes.txt -Raw)" >> $env:GITHUB_OUTPUT }
+
+      - name: Create the release
+        uses: OctopusDeploy/create-release-action@v3
+        with:
+          project: ${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}
+          release_number: ${{ steps.version.outputs.version }}
+          ignore_existing: true
+          release_notes: "Build ${{ github.event.workflow_run.html_url }} of ${{ github.event.workflow_run.head_sha }}, committed ${{ steps.commit.outputs.committed }}${{ steps.word.outputs.line }}"
